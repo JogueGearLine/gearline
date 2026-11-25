@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>GearLine V7 — Rua, máquina e precisão</title>
-<link rel="stylesheet" href="-src/gearline.css?v=20261124-convites">
+<title>GearLine V8.3 — Rua, máquina e precisão</title>
+<link rel="stylesheet" href="-src/gearline.css?v=20261125-menu">
 </head>
 <body>
 <header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
@@ -31,14 +31,61 @@
   <div class="panel specs"><div class="eyebrow">Sua máquina</div><h2 id="profileCarName">VOLKSWAGEN GOL G1</h2><div class="muted" id="profileCarDetail">Quadrado • 1.8 aspirado • Tração dianteira</div><div id="profileCarStats" style="margin-top:18px"><div class="spec"><label>Potência <b id="powtxt">110 cv</b></label><div class="bar"><i id="powbar" style="width:35%"></i></div></div><div class="spec"><label>Nitro <b id="nitxt">Base</b></label><div class="bar"><i id="nibar" style="width:20%"></i></div></div></div><button id="profileGarage" class="btn secondary full" onclick="show('garage')" style="margin-top:10px">ABRIR GARAGEM →</button></div>
  </div>
  <div class="menu">
-  <button class="tile" onclick="show('dealer')"><div class="eyebrow">Compra de carros</div><h3>CONCESSIONÁRIA</h3><p>Escolha seu próximo carro.</p></button>
-  <button class="tile" onclick="show('garage')"><span class="num">01</span><div class="eyebrow">Oficina</div><h3>GARAGEM</h3><p>Veja sua máquina, escolha a cor e instale melhorias.</p></button>
-  <button class="tile" onclick="startGame('free')"><span class="num">02</span><div class="eyebrow">Sem pressão</div><h3>MODO LIVRE</h3><p>Uma avenida noturna para sentir o carro. Sem bots.</p></button>
-  <button class="tile" onclick="show('raceChoice')"><span class="num">03</span><div class="eyebrow">Na pista</div><h3>ARRANCADA</h3><p>Dispute 402 ou 600 metros contra um rival ou contra o relógio.</p></button>
+  <button class="tile" onclick="show('carMenu')"><span class="num">01</span><div class="eyebrow">Sua máquina</div><h3>CARRO</h3><p>Concessionária e garagem.</p></button>
+  <button class="tile" onclick="show('raceMenu')"><span class="num">02</span><div class="eyebrow">Na pista</div><h3>CORRIDAS</h3><p>Arrancada e modo livre.</p></button>
+  <button class="tile community-tile" onclick="show('communityMenu')"><span class="num">03</span><div class="eyebrow">Rede GearLine</div><h3>COMUNIDADE</h3><p>Crews, perfis e amizades.</p></button>
+  <button class="tile community-tile" onclick="show('exchange')"><span class="num">04</span><div class="eyebrow">Economia</div><h3>CÂMBIO</h3><p>Converta reais em dólares do jogo.</p></button>
  </div>
 </section>
+<section id="carMenu" class="hidden group-menu" aria-labelledby="carMenuTitle">
+ <div class="hero"><div><div class="eyebrow">Sua máquina</div><h1 id="carMenuTitle">CARRO<span class="social-accent">.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <div class="dealer-grid"><button class="tile" onclick="show('dealer')"><div class="eyebrow">Compra de carros</div><h3>CONCESSIONÁRIA</h3><p>Escolha seu próximo carro.</p></button><button class="tile" onclick="show('garage')"><div class="eyebrow">Oficina</div><h3>GARAGEM</h3><p>Personalize e prepare sua máquina.</p></button></div>
+</section>
+<section id="raceMenu" class="hidden group-menu" aria-labelledby="raceMenuTitle">
+ <div class="hero"><div><div class="eyebrow">Na pista</div><h1 id="raceMenuTitle">CORRIDAS<span class="social-accent">.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <div class="dealer-grid"><button class="tile" onclick="show('raceChoice')"><div class="eyebrow">Duelo</div><h3>ARRANCADA</h3><p>402 m ou 600 m, contra bot, relógio ou outro piloto.</p></button><button class="tile" onclick="startGame('free')"><div class="eyebrow">Sem pressão</div><h3>MODO LIVRE</h3><p>Explore a avenida noturna.</p></button></div>
+</section>
+<section id="communityMenu" class="hidden group-menu" aria-labelledby="communityMenuTitle">
+ <div class="hero"><div><div class="eyebrow">Rede GearLine</div><h1 id="communityMenuTitle">COMUNIDADE<span class="social-accent">.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <div class="dealer-grid"><button class="tile" onclick="show('crew')"><div class="eyebrow">Equipes</div><h3>CREW</h3><p>Monte sua equipe ou encontre outras.</p></button><button class="tile" onclick="show('pilots')"><div class="eyebrow">Rede de pilotos</div><h3>PILOTOS</h3><p>Encontre perfis, amigos e adversários.</p></button></div>
+</section>
+<section id="crew" class="hidden" aria-labelledby="crewTitle">
+ <div class="hero"><div><div class="eyebrow">Comunidade / Equipes</div><h1 id="crewTitle">SUA <span class="social-accent">CREW.</span></h1></div><button class="btn secondary" type="button" onclick="show('communityMenu')">← COMUNIDADE</button></div>
+ <div class="social-layout">
+  <article class="panel social-card">
+   <div class="eyebrow">Minha equipe</div><h2 id="crewOwnName">SEM CREW</h2><p id="crewOwnDetail" class="muted">Crie sua equipe ou entre em uma existente.</p>
+   <ul id="crewMembers" class="social-list" aria-label="Membros da Crew"></ul>
+   <button id="crewLeave" class="btn ghost full hidden" type="button">SAIR DA CREW</button>
+   <div id="crewLeaveConfirm" class="hidden social-confirm"><p class="muted">Deseja sair? Se for líder, o membro mais antigo assumirá; se estiver sozinho, a Crew será encerrada.</p><div class="row"><button id="crewLeaveYes" class="btn secondary" type="button">Confirmar saída</button><button id="crewLeaveNo" class="btn ghost" type="button">Cancelar</button></div></div>
+   <form id="crewCreate" class="social-form hidden"><div class="social-heading"><h3>CRIAR CREW</h3><strong class="social-accent">US$ 50</strong></div>
+    <label class="field"><span>NOME DA CREW</span><input id="crewName" minlength="3" maxlength="24" required placeholder="Ex.: Night Shift"></label>
+    <label class="field"><span>SIGLA (2–5 LETRAS OU NÚMEROS)</span><input id="crewTag" minlength="2" maxlength="5" pattern="[A-Za-z0-9]{2,5}" required placeholder="NS" autocapitalize="characters"></label>
+    <p class="muted" id="crewWallet"></p><button class="btn full" type="submit">CRIAR CREW · US$ 50</button><button class="btn ghost full" type="button" onclick="show('exchange')">CONVERTER MOEDAS</button>
+   </form>
+  </article>
+  <article class="panel social-card"><div class="eyebrow">Encontre uma equipe</div><h2>CREWS</h2><form id="crewSearchForm" class="social-search"><label class="field"><span>NOME OU SIGLA</span><input id="crewSearch" maxlength="24" placeholder="Buscar Crew"></label><button class="btn secondary" type="submit">BUSCAR</button></form><ul id="crewDirectory" class="social-list" aria-label="Crews encontradas"></ul></article>
+ </div><p class="muted social-status" id="crewStatus" role="status"></p>
+</section>
+<section id="exchange" class="hidden" aria-labelledby="exchangeTitle">
+ <div class="hero"><div><div class="eyebrow">Economia / Moedas do jogo</div><h1 id="exchangeTitle">CÂMBIO<span class="social-accent">.</span></h1></div><button class="btn secondary" type="button" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <article class="panel social-card exchange-card"><div class="eyebrow">Sua carteira</div><div class="exchange-balances"><div><span>REAIS</span><strong id="exchangeCash">—</strong></div><div><span>DÓLARES</span><strong id="exchangeUsd">—</strong></div></div>
+  <div class="exchange-rate"><strong>R$ 1.000</strong><span aria-label="para">→</span><strong>US$ 5</strong></div>
+  <form id="exchangeForm" class="social-form"><label class="field"><span>QUANTIDADE DE LOTES (R$ 1.000 CADA)</span><input id="exchangeLots" type="number" min="1" max="1000000" step="1" value="1" required inputmode="numeric"></label><div class="social-heading"><span>Você paga</span><strong id="exchangePay">R$ 1.000</strong></div><div class="social-heading"><span>Você recebe</span><strong id="exchangeReceive" class="social-accent">US$ 5</strong></div><button id="exchangeSubmit" class="btn full" type="submit">CONVERTER</button></form><p id="exchangeStatus" class="muted social-status" role="status"></p><p class="muted">Somente moedas virtuais. A conversão é de reais para dólares.</p>
+ </article>
+</section>
+<section id="pilots" class="hidden" aria-labelledby="pilotsTitle">
+ <div class="hero"><div><div class="eyebrow">Comunidade / Rede de pilotos</div><h1 id="pilotsTitle">PILOTOS<span class="social-accent">.</span></h1></div><button class="btn secondary" type="button" onclick="show('communityMenu')">← COMUNIDADE</button></div>
+ <div class="social-layout pilots-layout">
+  <article class="panel social-card"><div class="eyebrow">Encontre pilotos</div><h2>REDE GEARLINE</h2>
+   <div id="pilotScopes" class="pilot-scopes" role="group" aria-label="Filtrar pilotos"><button class="btn secondary" type="button" data-scope="all" aria-pressed="true">Todos</button><button class="btn secondary" type="button" data-scope="friends" aria-pressed="false">Amigos</button><button class="btn secondary" type="button" data-scope="requests" aria-pressed="false">Pedidos</button><button class="btn secondary" type="button" data-scope="self" aria-pressed="false">Meu perfil</button></div>
+   <form id="pilotSearchForm" class="social-search"><label class="field"><span>NOME DO PILOTO</span><input id="pilotSearch" maxlength="18" placeholder="Buscar piloto"></label><button class="btn secondary" type="submit">BUSCAR</button></form>
+   <ul id="pilotDirectory" class="social-list" aria-label="Pilotos encontrados"></ul>
+  </article>
+  <article class="panel social-card public-pilot" id="pilotPublicCard"><div class="eyebrow">Perfil público</div><div id="pilotPublicContent"><h2>ESCOLHA UM PILOTO</h2><p class="muted">Veja os resultados e adicione amigos.</p></div></article>
+ </div><p id="pilotsStatus" class="muted social-status" role="status"></p>
+</section>
 <section id="raceChoice" class="hidden" aria-labelledby="raceChoiceTitle">
- <div class="hero"><h1 id="raceChoiceTitle">ARRANCADA</h1><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <div class="hero"><h1 id="raceChoiceTitle">ARRANCADA</h1><button class="btn secondary" onclick="show('raceMenu')">← CORRIDAS</button></div>
  <fieldset class="race-tracks">
   <legend>Pista</legend>
   <label><input type="radio" name="raceTrack" value="night" checked><span><strong>402 m</strong><small>Recorde pessoal <b id="trackBest402">—</b></small></span></label>
@@ -62,20 +109,22 @@
  </div>
 </section>
 <section id="dealer" class="hidden">
- <div class="hero"><div><h1>CONCESSIONÁRIA</h1><p class="muted">Saldo <strong id="dealerCash"></strong></p></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
+ <div class="hero"><div><h1>CONCESSIONÁRIA</h1><p class="muted">Saldo <strong id="dealerCash"></strong></p></div><button class="btn secondary" onclick="show('carMenu')">← CARRO</button></div>
  <div class="dealer-grid">
   <article class="panel specs"><div class="eyebrow">Volkswagen</div><h2>Gol Quadrado</h2><p class="muted">1.8 aspirado • 110 cv</p><button class="btn full" id="buy-gol" type="button">Comprar</button></article>
   <article class="panel specs"><div class="eyebrow">Peugeot</div><h2>Peugeot 206</h2><p class="muted">105 cv • aceita kit turbo</p><button class="btn full" id="buy-peugeot206" type="button">Comprar</button></article>
+  <article class="panel specs"><div class="eyebrow">Chevrolet</div><h2>Astra 2.0</h2><p class="muted">121 cv • aceita kit turbo</p><button class="btn full" id="buy-astra" type="button">Comprar</button></article>
+  <article class="panel specs"><div class="eyebrow">Chevrolet</div><h2>Chevette SL</h2><p class="muted">1.6 • 75 cv • tração traseira</p><button class="btn full" id="buy-chevette" type="button">Comprar</button></article>
  </div>
 </section>
 <section id="garage" class="hidden">
- <div class="hero"><div><div class="eyebrow">Oficina / garagem</div><h1>SUA <span style="color:var(--lime)">MÁQUINA.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
- <div class="garagegrid"><div class="panel carstage"><div class="eyebrow" id="garageCarProject">Volkswagen Gol • projeto 001</div><canvas id="carcanvas" width="900" height="360"></canvas><div class="stagefoot"><div><b id="garageCarName">GOL QUADRADO</b><div class="muted" id="garageCarDetail">1.8 aspirado • FWD • 5 marchas</div></div><label class="vehicle-picker">Carro <select id="vehicleChoice"><option value="gol">Gol Quadrado</option><option value="peugeot206">Peugeot 206</option></select></label></div></div>
- <div class="panel specs"><div class="eyebrow">Ficha técnica</div><h2>CONFIGURAÇÃO</h2><div class="spec"><label>Potência <b id="gpow">110 cv</b></label><div class="bar"><i id="gpowbar" style="width:35%"></i></div></div><div class="spec"><label>Peso <b id="garageCarWeight">980 kg</b></label><div class="bar"><i style="width:48%"></i></div></div><div class="spec"><label>Tração <b>Dianteira</b></label><div class="bar"><i style="width:72%"></i></div></div><div class="spec"><label>Nitro <b id="gnit">Não instalado</b></label><div class="bar"><i id="gnibar" style="width:0%"></i></div></div><div class="garage-shop-heading"><div class="eyebrow">Peças disponíveis</div><div class="garage-balance"><span class="muted">Saldo</span> <strong id="garageCash"></strong></div></div><div class="garage-tabs" role="group" aria-label="Categorias da garagem">
+ <div class="hero"><div><div class="eyebrow">Oficina / garagem</div><h1>SUA <span style="color:var(--lime)">MÁQUINA.</span></h1></div><button class="btn secondary" onclick="show('carMenu')">← CARRO</button></div>
+ <div class="garagegrid"><div class="panel carstage"><div class="eyebrow" id="garageCarProject">Volkswagen Gol • projeto 001</div><canvas id="carcanvas" width="900" height="360"></canvas><div class="stagefoot"><div><b id="garageCarName">GOL QUADRADO</b><div class="muted" id="garageCarDetail">1.8 aspirado • FWD • 5 marchas</div></div><label class="vehicle-picker">Carro <select id="vehicleChoice"><option value="gol">Gol Quadrado</option><option value="peugeot206">Peugeot 206</option><option value="astra">Astra 2.0</option><option value="chevette">Chevette SL</option></select></label></div></div>
+ <div class="panel specs"><div class="eyebrow">Ficha técnica</div><h2>CONFIGURAÇÃO</h2><div class="spec"><label>Potência <b id="gpow">110 cv</b></label><div class="bar"><i id="gpowbar" style="width:35%"></i></div></div><div class="spec"><label>Peso <b id="garageCarWeight">980 kg</b></label><div class="bar"><i style="width:48%"></i></div></div><div class="spec"><label>Tração <b id="garageCarTraction">Dianteira</b></label><div class="bar"><i style="width:72%"></i></div></div><div class="spec"><label>Nitro <b id="gnit">Não instalado</b></label><div class="bar"><i id="gnibar" style="width:0%"></i></div></div><div class="garage-shop-heading"><div class="eyebrow">Peças disponíveis</div><div class="garage-balance"><span class="muted">Saldo</span> <strong id="garageCash"></strong></div></div><div class="garage-tabs" role="group" aria-label="Categorias da garagem">
  <button class="btn secondary" id="garageMotorTab" aria-pressed="true" type="button">Motor</button>
  <button class="btn secondary" id="garageStyleTab" aria-pressed="false" type="button">Customização</button>
 </div>
-<div id="garageMotor"><div class="upgrade"><span>Acerto de motor (baixa e média)</span><div class="upgrade-actions"><button class="btn" id="buytune">R$ 900</button><button class="btn ghost hidden" id="remove-buytune" type="button">Retirar</button></div></div><div class="upgrade"><span>Escape dimensionado (alta)</span><div class="upgrade-actions"><button class="btn" id="buyexhaust">R$ 650</button><button class="btn ghost hidden" id="remove-buyexhaust" type="button">Retirar</button></div></div><div class="upgrade"><span>Kit nitro (+reserva)</span><div class="upgrade-actions"><button class="btn" id="buynitro">R$ 1.200</button><button class="btn ghost hidden" id="remove-buynitro" type="button">Retirar</button></div></div><div class="upgrade"><span>Relação curta de câmbio</span><div class="upgrade-actions"><button class="btn" id="buyshortgear">R$ 1.400</button><button class="btn ghost hidden" id="remove-buyshortgear" type="button">Retirar</button></div></div><div class="upgrade hidden" id="peugeotTurbo"><span>Kit turbo (Peugeot 206)</span><div class="upgrade-actions"><button class="btn" id="buyturbo">R$ 3.500</button><button class="btn ghost hidden" id="remove-buyturbo" type="button">Retirar</button></div></div></div>
+<div id="garageMotor"><div class="upgrade"><span>Acerto de motor (baixa e média)</span><div class="upgrade-actions"><button class="btn" id="buytune">R$ 900</button><button class="btn ghost hidden" id="remove-buytune" type="button">Retirar</button></div></div><div class="upgrade"><span>Escape dimensionado (alta)</span><div class="upgrade-actions"><button class="btn" id="buyexhaust">R$ 650</button><button class="btn ghost hidden" id="remove-buyexhaust" type="button">Retirar</button></div></div><div class="upgrade"><span>Kit nitro (+reserva)</span><div class="upgrade-actions"><button class="btn" id="buynitro">R$ 1.200</button><button class="btn ghost hidden" id="remove-buynitro" type="button">Retirar</button></div></div><div class="upgrade"><span>Relação curta de câmbio</span><div class="upgrade-actions"><button class="btn" id="buyshortgear">R$ 1.400</button><button class="btn ghost hidden" id="remove-buyshortgear" type="button">Retirar</button></div></div><div class="upgrade hidden" id="peugeotTurbo"><span id="turboUpgradeLabel">Kit turbo</span><div class="upgrade-actions"><button class="btn" id="buyturbo">R$ 3.500</button><button class="btn ghost hidden" id="remove-buyturbo" type="button">Retirar</button></div></div></div>
 <div id="garageStyle" class="hidden">
  <div class="upgrade"><span>Pintura</span><div class="row"><button class="btn secondary" onclick="changeColor(-1)">COR −</button><button class="btn secondary" onclick="changeColor(1)">COR +</button></div></div><div class="upgrade"><span>Kit backfire (chama e som)</span><div class="upgrade-actions"><button class="btn" id="buybackfire">R$ 2.000</button><button class="btn ghost hidden" id="remove-buybackfire" type="button">Retirar</button></div></div><div class="upgrade"><span>Suspensão</span><div class="upgrade-actions"><button class="btn" id="buylowered">R$ 800</button><button class="btn ghost hidden" id="remove-buylowered" type="button">Retirar</button></div></div>
  <fieldset class="suspension-settings hidden" id="suspensionSettings">
@@ -90,7 +139,7 @@
  <div class="hero"><div><div class="eyebrow" id="gametype">Modo livre</div><h1 id="gametitle">AVENIDA <span style="color:var(--lime)">NOTURNA.</span></h1></div><div class="row"><button class="btn ghost" onclick="show('home')">← SAIR</button><button class="btn secondary" id="fullscreenGame" type="button">Tela cheia</button><button class="btn secondary" id="pause">Ⅱ PAUSAR</button></div></div><details class="music-player music-driving"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><p class="mobile-display-status" id="mobileDisplayStatus" role="status"></p>
  <div class="game"><div class="gameview"><canvas id="road" width="1000" height="600"></canvas><div class="hud"><div class="chip" id="modechip">FREE DRIVE</div><div class="chip" id="carchip">GOL 1.8</div><div class="chip hidden" id="rivalchip"></div></div>
  <div class="race-map hidden" id="raceMap" role="img" aria-label="Mapa da arrancada. Jogador em verde na faixa de baixo, rival em azul na faixa de cima."><div class="race-map-track" aria-hidden="true"><span class="map-car map-rival" id="mapRival"></span><span class="map-car map-player" id="mapPlayer"></span></div></div>
- </div><aside class="panel side"><div class="eyebrow" style="text-align:center">Painel / telemetria</div><div class="telemetry"><div class="speed"><span id="speed">0</span><small> km/h</small></div><div class="muted" style="text-align:center">VELOCIDADE</div><div class="rpmbar"><i id="rpmfill"></i></div><div class="rpm-labels" style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"><span>0 RPM</span><span id="rpmtext">900 RPM</span><span>7.000</span></div><div class="gear" id="gear">N<small>MARCHA</small></div><div class="muted" style="text-align:center" id="nitrostatus">NITRO: INDISPONÍVEL</div></div><div class="steering" id="steering"><button class="btn secondary" id="steerL" aria-label="Esquerda"><span class="desktop-control">↑ A / ESQUERDA</span><span class="touch-control" aria-hidden="true"><b>←</b><small>Esquerda</small></span></button><button class="btn secondary" id="steerR" aria-label="Direita"><span class="desktop-control">↓ D / DIREITA</span><span class="touch-control" aria-hidden="true"><b>→</b><small>Direita</small></span></button></div><div class="pedals"><button class="pedal" id="brake" aria-label="Freio"><span class="desktop-control">FREIO<br>S / ↓</span><span class="touch-control" aria-hidden="true"><b>↓</b><small>Freio</small></span></button><button class="pedal" id="throttle" aria-label="Acelerar"><span class="desktop-control">ACELERADOR<br>W / ↑</span><span class="touch-control" aria-hidden="true"><b>▲</b><small>Acelerar</small></span></button></div><div class="shift"><button id="down" aria-label="Marcha"><span class="desktop-control">− Q</span><span class="touch-control" aria-hidden="true"><b>−</b><small>Marcha</small></span></button><button id="up" aria-label="Marcha"><span class="desktop-control">+ E</span><span class="touch-control" aria-hidden="true"><b>+</b><small>Marcha</small></span></button></div><button class="btn secondary full" id="nitrobtn" style="margin-top:8px" aria-label="Nitro"><span class="desktop-control">NITRO • N</span><span class="touch-control" aria-hidden="true"><b>N₂O</b><small>Nitro</small></span></button><div class="racemsg" id="racemsg"></div><div class="help">Engate a 1ª com E antes de sair. TECLADO: W/↑ acelerar · S/↓ frear · Q/E marchas · segure N com o acelerador para usar nitro · A/D direção progressiva no modo livre · Esc pausar. No toque, mantenha pressionados os pedais.</div></aside></div>
+ </div><aside class="panel side"><div class="eyebrow" style="text-align:center">Painel / telemetria</div><div class="telemetry"><div class="speed"><span id="speed">0</span><small> km/h</small></div><div class="muted" style="text-align:center">VELOCIDADE</div><div class="rpmbar"><i id="rpmfill"></i></div><div class="rpm-labels" style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted)"><span>0 RPM</span><span id="rpmtext">900 RPM</span><span id="rpmmax">7.000</span></div><div class="gear" id="gear">N<small>MARCHA</small></div><div class="muted" style="text-align:center" id="nitrostatus">NITRO: INDISPONÍVEL</div></div><div class="steering" id="steering"><button class="btn secondary" id="steerL" aria-label="Esquerda"><span class="desktop-control">↑ A / ESQUERDA</span><span class="touch-control" aria-hidden="true"><b>←</b><small>Esquerda</small></span></button><button class="btn secondary" id="steerR" aria-label="Direita"><span class="desktop-control">↓ D / DIREITA</span><span class="touch-control" aria-hidden="true"><b>→</b><small>Direita</small></span></button></div><div class="pedals"><button class="pedal" id="brake" aria-label="Freio"><span class="desktop-control">FREIO<br>S / ↓</span><span class="touch-control" aria-hidden="true"><b>↓</b><small>Freio</small></span></button><button class="pedal" id="throttle" aria-label="Acelerar"><span class="desktop-control">ACELERADOR<br>W / ↑</span><span class="touch-control" aria-hidden="true"><b>▲</b><small>Acelerar</small></span></button></div><div class="shift"><button id="down" aria-label="Marcha"><span class="desktop-control">− Q</span><span class="touch-control" aria-hidden="true"><b>−</b><small>Marcha</small></span></button><button id="up" aria-label="Marcha"><span class="desktop-control">+ E</span><span class="touch-control" aria-hidden="true"><b>+</b><small>Marcha</small></span></button></div><button class="btn secondary full" id="nitrobtn" style="margin-top:8px" aria-label="Nitro"><span class="desktop-control">NITRO • N</span><span class="touch-control" aria-hidden="true"><b>N₂O</b><small>Nitro</small></span></button><div class="racemsg" id="racemsg"></div><div class="help">Engate a 1ª com E antes de sair. TECLADO: W/↑ acelerar · S/↓ frear · Q/E marchas · segure N com o acelerador para usar nitro · A/D direção progressiva no modo livre · Esc pausar. No toque, mantenha pressionados os pedais.</div></aside></div>
 </section>
 <section id="result" class="result panel hidden" aria-labelledby="resulttitle">
  <div class="eyebrow" id="resultMode">Arrancada • 402 m</div>
@@ -108,14 +157,18 @@
  </div>
  <div class="race-actions"><button class="btn" id="raceRetry">CORRER NOVAMENTE</button><button class="btn secondary" onclick="show('home')">VOLTAR AO PERFIL</button></div>
 </section>
-</main><div id="toast" class="toast hidden"></div>
+</main><aside id="raceNotice" class="race-notice hidden" aria-label="Convite de corrida" aria-live="polite"><div class="race-notice-copy"><span class="eyebrow">Convite de arrancada</span><strong id="raceNoticePilot"></strong><small id="raceNoticeDetail" class="muted"></small></div><div id="raceNoticeActions" class="row"><button id="raceNoticeAccept" class="btn" type="button">ACEITAR</button><button id="raceNoticeDecline" class="btn ghost" type="button">RECUSAR</button></div><p id="raceNoticeStatus" class="muted" role="status"></p></aside><div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
-<script src="-src/accounts.js?v=20261124-duelo"></script>
+<script src="-src/accounts.js?v=20261125-pilots"></script>
 <script src="-src/exhaust.js"></script>
 <script src="-src/peugeot206.js"></script>
-<script src="-src/music.js?v=pages-preview"></script>
-<script src="-src/race-physics.js?v=20261124-duelo3"></script>
-<script src="-src/pages-config.js"></script>
-<script src="-src/race-online.js?v=pages-preview"></script>
-<script src="-src/race-lobby.js?v=20261124-duelo3"></script>
-<script src="-src/game.js?v=20261124-duelo3"></script></body></html>
+<script src="-src/new-vehicles.js?v=20261125-chevette4"></script>
+<script src="-src/new-engine-audio.js?v=20261125-audio"></script>
+<script src="-src/music.js?v=v8.3-release"></script>
+<script src="-src/race-physics.js?v=20261125-cars"></script>
+<script src="-src/pages-config.js?v=v8.3-release"></script>
+<script src="-src/race-online.js?v=v8.3-release"></script>
+<script src="-src/race-lobby.js?v=20261125-cars"></script>
+<script src="-src/community.js?v=20261125-crew"></script>
+<script src="-src/pilots.js?v=20261125-pilots"></script>
+<script src="-src/game.js?v=20261125-menu"></script></body></html>

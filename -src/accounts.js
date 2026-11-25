@@ -39,16 +39,20 @@ function createGearLineAccounts() {
   base.maxSpeed=number(saved?.maxSpeed,0,500,0);
   base.color=Math.floor(number(saved?.color,0,4,0));
   base.peugeotColor=Math.floor(number(saved?.peugeotColor,0,4,0));
+  base.astraColor=Math.floor(number(saved?.astraColor,0,4,0));
+  base.chevetteColor=Math.floor(number(saved?.chevetteColor,0,4,0));
   const hasGarage=Object.hasOwn(saved??{},'ownedVehicles');
   base.usd=number(saved?.usd,0,1e9,hasGarage?base.usd:0);
   base.ownedVehicles=hasGarage
-   ?['gol','peugeot206'].filter(id=>Array.isArray(saved.ownedVehicles)&&saved.ownedVehicles.includes(id))
+   ?['gol','peugeot206','astra','chevette'].filter(id=>Array.isArray(saved.ownedVehicles)&&saved.ownedVehicles.includes(id))
    :['gol','peugeot206'];
   base.vehicleId=base.ownedVehicles.includes(saved?.vehicleId)?saved.vehicleId:base.ownedVehicles[0]??null;
   base.best=Number.isFinite(Number(saved?.best))&&Number(saved?.best)>0?Number(saved?.best):null;
   base.best600=Number.isFinite(Number(saved?.best600))&&Number(saved?.best600)>0?Number(saved?.best600):null;
   normalizeSetup(base,saved);
   if(base.peugeotSetup)normalizeSetup(base.peugeotSetup,saved?.peugeotSetup);
+  if(base.astraSetup)normalizeSetup(base.astraSetup,saved?.astraSetup);
+  if(base.chevetteSetup)normalizeSetup(base.chevetteSetup,saved?.chevetteSetup);
   return base;
  }
 
@@ -108,8 +112,29 @@ function createGearLineAccounts() {
   return current.queue;
  }
 
+ async function socialPurchase(rpc,args,progress){
+  const current=account;
+  if(!current)throw new Error('GL_SIGN_IN');
+  await flush();
+  if(account!==current||current.conflict)throw new Error('GL_STALE_PROFILE');
+  let result;
+  try{result=check(await client.rpc(rpc,{...args,p_revision:current.revision}));}
+  catch(error){if(error?.message==='GL_STALE_PROFILE')current.conflict=true;throw error;}
+  current.revision=Number(result.revision);
+  progress.cash=Number(result.cash);progress.usd=Number(result.usd);
+  return result;
+ }
+
  return {
   load,save,flush,
+  exchange(lots,progress){return socialPurchase('gearline_exchange',{p_lots:lots},progress)},
+  createCrew(name,tag,progress){return socialPurchase('gearline_crew_create',{p_name:name,p_tag:tag},progress)},
+  async crewDirectory(search=''){return check(await client.rpc('gearline_crew_directory',{p_search:search}))},
+  async joinCrew(id){return check(await client.rpc('gearline_crew_join',{p_crew:id}))},
+  async leaveCrew(){return check(await client.rpc('gearline_crew_leave'))},
+  async pilots(search='',scope='all'){return check(await client.rpc('gearline_pilot_directory',{p_search:search,p_scope:scope}))},
+  async friendAction(id,action){return check(await client.rpc('gearline_friend_action',{p_pilot:id,p_action:action}))},
+  async invitePilot(id,distance){return check(await client.rpc('gearline_invite_pilot',{p_pilot:id,p_distance:distance}))},
   async raceInvites(){
    const fields='id,sender_id,sender_name,recipient_name,distance,status,sender_ready,recipient_ready';
    const rows=check(await client.from('gearline_race_invites').select(fields)

@@ -1,5 +1,5 @@
 const GearLineMusic = (() => {
- if(location.hostname.endsWith('.trycloudflare.com')||location.hostname.endsWith('.github.io')){
+ if(location.hostname.endsWith('.trycloudflare.com')||location.hostname.endsWith('.github.io')||['gearline.app.br','www.gearline.app.br'].includes(location.hostname)){
   for(const panel of document.querySelectorAll('.music-player'))panel.classList.add('hidden');
   return {start(){},stop(){}};
  }

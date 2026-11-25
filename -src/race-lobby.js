@@ -20,7 +20,8 @@ const GearLineRaceLobby=(()=>{
    GL_ALREADY_INVITED:'Já existe um convite ativo entre vocês.',
    GL_INVITE_LIMIT:'Aguarde um minuto antes de enviar mais convites.',
    GL_INVITE_UNAVAILABLE:'Este convite expirou ou mudou de status.',
-   GL_PROFILE_REQUIRED:'Abra seu perfil antes de convidar.'
+   GL_PROFILE_REQUIRED:'Abra seu perfil antes de convidar.',
+   GL_VEHICLE_ONLINE_PENDING:'Astra e Chevette ainda estão em teste local. Selecione Gol ou Peugeot para duelos online.'
   })[error?.message]||'Não foi possível acessar os convites. Tente novamente.';
  }
 
