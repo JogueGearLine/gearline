@@ -2,7 +2,9 @@
 const GearLineRacePhysics=(()=>{
  const vehiclePhysics={
   gol:{maxRpm:6800,speedCap:245,driveForce:15.7,torquePeak:4000,roadLoad:.92,ratios:[0,3.55,1.97,1.32,1,.80]},
-  peugeot206:{maxRpm:7000,speedCap:207,driveForce:13.2,torquePeak:4650,ratios:[0,3.62,1.97,1.36,1.04,.80]}
+  peugeot206:{maxRpm:7000,speedCap:207,driveForce:13.2,torquePeak:4650,turboAvailable:true,ratios:[0,3.62,1.97,1.36,1.04,.80]},
+  astra:{maxRpm:6500,speedCap:224,driveForce:15.0,torquePeak:4250,roadLoad:1.02,turboAvailable:true,ratios:[0,3.58,1.87,1.27,.96,.76]},
+  chevette:{maxRpm:6200,speedCap:178,driveForce:12.1,torquePeak:3400,roadLoad:.87,turboAvailable:true,ratios:[0,3.76,2.16,1.40,1,.82]}
  };
 
  const ratios=[0,3.45,1.94,1.29,.97,.80];
