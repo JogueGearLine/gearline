@@ -593,6 +593,37 @@ function mixEngine(samples,rpm,speed,throttle,active,now,isGol){
  });
 }
 
+async function loadNewEngineSamples(context,engine,clips){
+ try{
+  const decode=async wav=>context.decodeAudioData(Uint8Array.from(atob(wav),c=>c.charCodeAt(0)).buffer);
+  const buffers=await Promise.all(clips.map(async clip=>({rpm:clip.rpm,off:await decode(clip.off),on:await decode(clip.on)})));
+  const layer=buffer=>{
+   const source=context.createBufferSource(),gain=context.createGain();
+   source.buffer=buffer;source.loop=true;gain.gain.value=0;
+   source.connect(gain).connect(engine.filter);source.start();
+   return {source,gain};
+  };
+  engine.newSamples=buffers.map(({rpm,off,on})=>({rpm,off:layer(off),on:layer(on)}));
+ }catch{engine.samplesFailed=true;}
+}
+
+function mixNewEngine(samples,rpm,throttle,active,now){
+ const firstHigher=samples.findIndex(sample=>sample.rpm>=rpm);
+ const upper=firstHigher<0?samples.length-1:firstHigher;
+ const lower=firstHigher<0?upper:Math.max(0,upper-1);
+ const t=upper===lower?0:Math.max(0,Math.min(1,(rpm-samples[lower].rpm)/(samples[upper].rpm-samples[lower].rpm)));
+ const blend=t*t*(3-2*t),load=throttle?.92:.08;
+ const volume=active?(throttle?.86:.58):0;
+ samples.forEach((sample,index)=>{
+  const weight=lower===upper?(index===lower?1:0):index===lower?Math.sqrt(1-blend):index===upper?Math.sqrt(blend):0;
+  const rate=Math.max(.62,Math.min(1.85,rpm/sample.rpm));
+  for(const [name,amount] of [['off',Math.sqrt(1-load)],['on',Math.sqrt(load)]]){
+   sample[name].source.playbackRate.setTargetAtTime(rate,now,.075);
+   sample[name].gain.gain.setTargetAtTime(volume*weight*amount,now,.09);
+  }
+ });
+}
+
 const engineAudioByModel=new Map();
 const turboReleaseAudio=new Audio('-Sounds/Carro/Turbo/Turbo(3).wav');
 turboReleaseAudio.preload='auto';
@@ -611,10 +642,16 @@ function playTurboRelease(){
 function playShiftSound(){
  try{shiftAudio.currentTime=0;shiftAudio.play().catch(()=>{})}catch(e){}
 }
+function resumeEngineAudio(){
+ if(audio&&audio.state!=='running')audio.resume().catch(()=>{});
+}
+// A mobile browser may defer audio until a second genuine touch after fullscreen.
+document.addEventListener('pointerup',()=>{if(running)resumeEngineAudio()},{capture:true,passive:true});
+window.addEventListener('keydown',()=>{if(running)resumeEngineAudio()},{passive:true});
 function startAudio(){
  try{
   audio=audio||new (window.AudioContext||window.webkitAudioContext)();
-  if(audio.state==='suspended')audio.resume();
+  resumeEngineAudio();
   const model=selectedVehicle();
   engineOsc=engineAudioByModel.get(model.id);
   if(!engineOsc){
@@ -640,8 +677,10 @@ function startAudio(){
     engineOsc.turbo={whistle,whistleGain};
    }
    engineAudioByModel.set(model.id,engineOsc);
-    engineOsc.enginePitch=model.enginePitch||1;
-    if(model.id==='gol'||model.id==='peugeot206')loadEngineSamples(audio,engineOsc,model.id==='gol'?golEngineSamples:peugeotEngineSamples);
+   engineOsc.enginePitch=model.enginePitch||1;
+   engineOsc.isNew=Boolean(typeof GearLineNewEngineAudio!=='undefined'&&GearLineNewEngineAudio[model.id]);
+   if(engineOsc.isNew)loadNewEngineSamples(audio,engineOsc,GearLineNewEngineAudio[model.id]);
+   else if(model.id==='gol'||model.id==='peugeot206')loadEngineSamples(audio,engineOsc,model.id==='gol'?golEngineSamples:peugeotEngineSamples);
   }
  }catch(e){}
 }
@@ -653,6 +692,8 @@ function engineSound(){
   const throttle=keys.w||keys.arrowup||touch.throttle;
   const samples=engineOsc.samples;
   if(samples)mixEngine(samples,active?car.rpm:900,active?car.speed:0,throttle,active,audio.currentTime,!engineOsc.turbo);
+  const newSamples=engineOsc.newSamples;
+  if(newSamples)mixNewEngine(newSamples,active?car.rpm:900,throttle,active,audio.currentTime);
   if(engineOsc.turbo){
    const {whistle,whistleGain}=engineOsc.turbo;
    const boost=active&&activeSetup().upgrades.turbo?car.boost:0;
@@ -662,9 +703,11 @@ function engineSound(){
    whistleGain.gain.setTargetAtTime(boost*.025,audio.currentTime,.09);
   }
   engineOsc.master.gain.setTargetAtTime(active?1:0,audio.currentTime,.07);
-  engineOsc.synthGain.gain.setTargetAtTime(active&&!samples?(throttle?.055:.018):0,audio.currentTime,.12);
-  const cutoff=samples?Math.min(4100,1750+(active?car.rpm:900)*.37):active?Math.min(1250,360+car.rpm*.12):220;
+  const fallbackVolume=engineOsc.isNew?(throttle?.24:.14):(throttle?.055:.018);
+  engineOsc.synthGain.gain.setTargetAtTime(active&&!samples&&!newSamples?fallbackVolume:0,audio.currentTime,.12);
+  const cutoff=newSamples?Math.min(5000,1950+(active?car.rpm:900)*.45):samples?Math.min(4100,1750+(active?car.rpm:900)*.37):active?Math.min(1250,360+car.rpm*.12):220;
   engineOsc.filter.frequency.setTargetAtTime(cutoff,audio.currentTime,.12);
+  $('driving').dataset.engineAudio=audio.state!=='running'?audio.state:newSamples?'engine-samples':samples?'samples':engineOsc.samplesFailed?'fallback':'synth';
  }
 }
 function beep(freq,dur){try{let o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;g.gain.value=.04;o.connect(g).connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.stop(audio.currentTime+dur)}catch(e){}}
@@ -1268,11 +1311,11 @@ function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connec
  $('mobileDisplayStatus').textContent='';
  $('nitrobtn').setAttribute('aria-disabled',String(!activeSetup().upgrades.nitro));
  show('driving');
+ startAudio();
  if(window.matchMedia('(pointer:coarse)').matches){
   window.scrollTo(0,0);
   if(document.fullscreenElement!==$('driving'))void toggleDrivingFullscreen();
  }
- startAudio();
  if(activeSetup().upgrades.backfire)exhaustEffects.prepareSound(audio);
  running=true;
  last=performance.now();
