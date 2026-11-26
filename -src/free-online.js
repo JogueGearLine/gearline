@@ -1,4 +1,14 @@
 const GearLineFreeOnline=(()=>{
+ const syncIntervalMs=200;
+ const maximumPredictionMs=500;
+ const stalePositionMs=1200;
+
+ function currentDistance(peer,now){
+  const age=peer.ageAtReceiptMs+Math.max(0,now-peer.receivedAt);
+  if(age>stalePositionMs)return null;
+  return peer.distance+peer.speed/3.6*Math.min(maximumPredictionMs,age)/1000;
+ }
+
  function connect(api,vehicle,readDrive,onStatus){
   const session=crypto.randomUUID();
   const drivers=new Map();
@@ -7,6 +17,8 @@ const GearLineFreeOnline=(()=>{
 
   async function sync(){
    const drive=readDrive();
+   const sentAt=performance.now();
+   let delay=900;
    pending=true;
    try{
     const result=await api.syncFreeDrive({
@@ -16,12 +28,18 @@ const GearLineFreeOnline=(()=>{
     if(!joined){joined=true;offset=result.distance-drive.dist;}
     if(closed)return;
     const now=performance.now();
+    const oneWay=Math.min(250,(now-sentAt)/2);
+    delay=Math.max(0,syncIntervalMs-(now-sentAt));
     const active=new Set();
     for(const peer of result.drivers){
      active.add(peer.id);
      const previous=drivers.get(peer.id);
+     const ageAtReceiptMs=(Number.isFinite(peer.ageMs)?Math.max(0,peer.ageMs):0)+oneWay;
+     const current={...peer,receivedAt:now,ageAtReceiptMs};
+     const distance=currentDistance(current,now);
+     if(distance===null){drivers.delete(peer.id);continue;}
      drivers.set(peer.id,{
-      ...peer,receivedAt:now,shownDistance:previous?.shownDistance??peer.distance,
+      ...current,shownDistance:previous&&currentDistance(previous,now)!==null?previous.shownDistance:distance,
       shownLane:previous?.shownLane??peer.lane,
       wheelAngle:previous?.wheelAngle??0
      });
@@ -46,7 +64,7 @@ const GearLineFreeOnline=(()=>{
    }finally{
     pending=false;
     if(closed){if(joined)void leave();}
-    else timer=setTimeout(sync,joined?220:1600);
+    else timer=setTimeout(sync,delay);
    }
   }
 
@@ -142,5 +160,5 @@ const GearLineFreeOnline=(()=>{
    return along&&across&&Math.max(along[0],across[0])<Math.min(along[1],across[1]);
   });
  }
- return {connect,loadScenery,drawScenery,nearbyTraffic,hitsTraffic,ground,carWidth,pixelsPerMeter,spawnLane};
+ return {connect,currentDistance,loadScenery,drawScenery,nearbyTraffic,hitsTraffic,ground,carWidth,pixelsPerMeter,spawnLane};
 })();
