@@ -1,12 +1,13 @@
 const GearLineFreeOnline=(()=>{
  const syncIntervalMs=200;
- const maximumPredictionMs=500;
+ const maximumPredictionMs=180;
  const stalePositionMs=1200;
 
  function currentDistance(peer,now){
   const age=peer.ageAtReceiptMs+Math.max(0,now-peer.receivedAt);
   if(age>stalePositionMs)return null;
-  return peer.distance+peer.speed/3.6*Math.min(maximumPredictionMs,age)/1000;
+  const predicted=peer.distance+peer.speed/3.6*Math.min(maximumPredictionMs,age)/1000;
+  return Math.max(peer.minimumDistance??-Infinity,predicted);
  }
 
  function connect(api,vehicle,readDrive,onStatus){
@@ -38,8 +39,10 @@ const GearLineFreeOnline=(()=>{
      const current={...peer,receivedAt:now,ageAtReceiptMs};
      const distance=currentDistance(current,now);
      if(distance===null){drivers.delete(peer.id);continue;}
+     const previousDistance=previous?currentDistance(previous,now):null;
      drivers.set(peer.id,{
-      ...current,shownDistance:previous&&currentDistance(previous,now)!==null?previous.shownDistance:distance,
+      ...current,minimumDistance:previousDistance??-Infinity,
+      shownDistance:previous&&previousDistance!==null?previous.shownDistance:distance,
       shownLane:previous?.shownLane??peer.lane,
       wheelAngle:previous?.wheelAngle??0
      });

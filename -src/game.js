@@ -1207,7 +1207,7 @@ function visibleFreeDrivers(width,center,t,dt){
  for(const peer of freeConnection.drivers.values()){
   const distance=avenue.currentDistance(peer,t);
   if(distance===null)continue;
-  peer.shownDistance+=(distance-peer.shownDistance)*blend;
+  peer.shownDistance=Math.max(peer.shownDistance,peer.shownDistance+(distance-peer.shownDistance)*blend);
   peer.shownLane+=(peer.lane-peer.shownLane)*blend;
   peer.wheelAngle=(peer.wheelAngle+peer.speed/3.6*dt/.29)%(Math.PI*2);
   place(peer,peer.shownDistance,peer.shownLane);
@@ -1379,7 +1379,7 @@ function updateOnlineRace(dt,now){
   toast('Conexão com a corrida interrompida.');
   return;
  }
- const state=connection.state;
+ const state=connection.sample(now);
  if(!state||state.phase==='waiting')return;
  const own=state.players.find(player=>player.id===connection.id);
  const other=state.players.find(player=>player.id!==connection.id);
@@ -1394,7 +1394,7 @@ function updateOnlineRace(dt,now){
  }
  const follow=(driver,snapshot)=>{
   const previous=driver.dist;
-  driver.dist+=(snapshot.distance-driver.dist)*Math.min(1,dt*20);
+  driver.dist=Math.max(driver.dist,driver.dist+(snapshot.distance-driver.dist)*Math.min(1,dt*20));
   driver.speed=snapshot.speed;
   driver.rpm=snapshot.rpm;
   driver.gear=snapshot.gear;
