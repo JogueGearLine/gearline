@@ -150,6 +150,12 @@ function createGearLineAccounts() {
   async duelTicket(id){
    return check(await client.rpc('gearline_issue_duel_ticket',{p_invite:id}));
   },
+ async syncFreeDrive(state){
+   return check(await client.rpc('gearline_free_drive',state).abortSignal(AbortSignal.timeout(4500)));
+ },
+ async leaveFreeDrive(session){
+   check(await client.rpc('gearline_free_leave',{p_session:session}));
+ },
   get unlimitedCash(){return account?.unlimitedCash===true},
   get conflict(){return account?.conflict===true},
   async restore(){

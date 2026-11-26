@@ -449,8 +449,8 @@ function drawNewBrakeLight(ctx,x,y,rx,ry){
  ctx.fillStyle='#ff452d';ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
 }
 
-function vehicle(ctx,cx,ground,width,angle,tilt,braking=false,isRival=false){
- const model=isRival?rival.model:selectedVehicle();
+function vehicle(ctx,cx,ground,width,angle,tilt,braking=false,remote=null){
+ const model=remote?.model??selectedVehicle();
  const {body,axleY,diameter,wheels}=model;
  if(!ready(body)||!ready(wheels[0].image))return;
  const scale=width/model.width,center=model.width/2;
@@ -470,12 +470,12 @@ function vehicle(ctx,cx,ground,width,angle,tilt,braking=false,isRival=false){
   ctx.restore();
  }
  ctx.save();
- ctx.translate(center,axleY+(isRival?0:bodyDrop(model)));
- ctx.rotate(tilt+(isRival?0:bodyRake(model)));
+ ctx.translate(center,axleY+(remote?0:bodyDrop(model)));
+ ctx.rotate(tilt+(remote?0:bodyRake(model)));
  ctx.translate(-center,-axleY);
- const sportExhaust=(isRival?rival.upgrades:activeSetup().upgrades).exhaust;
+ const sportExhaust=(remote?.upgrades??activeSetup().upgrades).exhaust;
  if(sportExhaust&&model.id!=='gol')drawPeugeotSportExhaust(ctx,model);
- ctx.drawImage(bodyForColor(model,isRival?rival.color:undefined,isRival?rival.paint:undefined),0,0,model.width,model.height);
+ ctx.drawImage(bodyForColor(model,remote?.color,remote?.paint),0,0,model.width,model.height);
  if(sportExhaust&&model.id==='gol')drawSportExhaust(ctx,model);
  if(braking)model.brake(ctx);
  ctx.restore();
@@ -900,6 +900,9 @@ function createRival(playerUpgrades,random=Math.random){
 }
 let rival=null;
 let laneY=470,lateral=0;
+let freeConnection=null;
+let trafficHitAt=-Infinity;
+const freeDriverPaint=new Map();
 let freeDrivePaid=0,freeDriveSaved=0;
 const freeDriveMetersPerReal=15;
 
@@ -924,8 +927,15 @@ function update(dt,t){
  const accel=keys.w||keys.arrowup||touch.throttle, brake=brakePressed();
  if(mode==='race'&&countdown>0){countdown=Math.max(0,countdown-dt);if(accel&&car.gear>0&&!penalty){penalty=true;toast('Queima de largada! Vitória e prêmio invalidados.')}$('racemsg').textContent=penalty?'QUEIMOU!':countdown>0?String(Math.ceil(countdown)):'VAI!';car.rpm+=( (accel?3400:900)-car.rpm)*Math.min(1,dt*5);if(!countdown)beep(880,.15);return;}
  const previousSpeed=car.speed;
+ const previousDistance=car.dist, previousLane=laneY;
  const meters=advanceCar(car,model,upgrades,accel,brake,keys.n||touch.nitro,dt,{finishDistance:mode==='race'?raceDistance:Infinity});
  if(mode==='free'){const steer=Number(!!(keys.d||keys.arrowright))-Number(!!(keys.a||keys.arrowleft));const target=steer*Math.min(105,car.speed*2.2);lateral+=(target-lateral)*Math.min(1,dt*5);laneY=Math.max(360,Math.min(580,laneY+lateral*dt));if((laneY<=360&&lateral<0)||(laneY>=580&&lateral>0))lateral=0;}
+ if(freeConnection&&car.speed>15&&t-trafficHitAt>=650&&GearLineFreeOnline.hitsTraffic(
+  freeConnection.position(previousDistance),freeConnection.position(car.dist),previousLane,laneY,(performance.timeOrigin+t)/1000,dt
+ )){
+  car.speed*=.76;
+  trafficHitAt=t;
+ }
  if(mode==='free')rewardFreeDrive();
  if(mode==='race'){
   const targetLead=reducedMotion.matches?0:Math.min(94,car.speed*.55);
@@ -1170,18 +1180,78 @@ function drawDistanceBoards(ctx,width,finishX){
  ctx.textAlign='left';
 }
 
+function visibleFreeDrivers(width,center,t,dt){
+ if(!freeConnection)return [];
+ const avenue=GearLineFreeOnline;
+ const origin=freeConnection.position(car.dist);
+ const now=performance.now(), blend=Math.min(1,dt*9);
+ const nearby=[];
+ function place(peer,distance,lane){
+  const model=vehicles[peer.vehicle];
+  if(!model)return;
+  const x=center+(distance-origin)*avenue.pixelsPerMeter;
+  const size=avenue.carWidth(lane);
+  if(x>=-size&&x<=width+size)nearby.push({peer,model,x,size,y:avenue.ground(lane)});
+ }
+ for(const peer of freeConnection.drivers.values()){
+  const travel=peer.speed/3.6*Math.min(.35,(now-peer.receivedAt)/1000);
+  peer.shownDistance+=(peer.distance+travel-peer.shownDistance)*blend;
+  peer.shownLane+=(peer.lane-peer.shownLane)*blend;
+  peer.wheelAngle=(peer.wheelAngle+peer.speed/3.6*dt/.29)%(Math.PI*2);
+  place(peer,peer.shownDistance,peer.shownLane);
+ }
+ for(const traffic of avenue.nearbyTraffic(origin,(performance.timeOrigin+t)/1000))place(traffic,traffic.distance,traffic.lane);
+ return nearby.sort((a,b)=>a.y-b.y);
+}
+
+function drawFreeDriver(ctx,{peer,model,x,size,y}){
+ const paintKey=model.id+':'+peer.color;
+ if(!freeDriverPaint.has(paintKey))freeDriverPaint.set(paintKey,{});
+ ctx.save();
+ ctx.fillStyle='#080c10aa';
+ ctx.beginPath();ctx.ellipse(x,y,size*.45,8,0,0,Math.PI*2);ctx.fill();
+ vehicle(ctx,x,y,size,peer.wheelAngle,0,peer.braking,{model,color:peer.color,upgrades:{exhaust:peer.exhaust},paint:freeDriverPaint.get(paintKey)});
+ ctx.restore();
+}
+
+function drawPilotTag(ctx,pilot,x,ground,width,model,viewportWidth){
+ if(!pilot.name||x<0||x>viewportWidth)return;
+ const y=ground-width*(model.axleY+model.diameter/2)/model.width-8;
+ const level=Number.isInteger(pilot.level)&&pilot.level>0?' ['+pilot.level+']':'';
+ const crew=pilot.crewTag?' · '+pilot.crewTag:'';
+ const line=pilot.name+level+crew;
+ ctx.save();
+ ctx.font='800 14px Inter,Arial,sans-serif';
+ const size=Math.min(198,Math.ceil(ctx.measureText(line).width));
+ const center=Math.max(size/2+4,Math.min(viewportWidth-size/2-4,x));
+ ctx.textAlign='center';
+ ctx.lineJoin='round';
+ ctx.lineWidth=3;
+ ctx.strokeStyle='#0b1218';
+ ctx.fillStyle='#c5f36b';
+ ctx.strokeText(line,center,y,size);
+ ctx.fillText(line,center,y,size);
+ ctx.restore();
+}
+
 function drawRoad(t,dt){
  const w=roadWidth,h=roadHeight,x=drawingContext(roadCanvas,w,h);
  x.fillStyle='#101e2b';x.fillRect(0,0,w,h);
+ const impactAge=t-trafficHitAt;
+ if(freeConnection&&!paused&&!reducedMotion.matches&&impactAge<180){
+  x.translate(0,Math.cos(impactAge*.085)*3.5*(1-impactAge/180));
+ }
  function tile(im,y,hh,offset,ww){if(!ready(im))return;let start=-((offset%ww+ww)%ww);for(let i=start;i<w;i+=ww)x.drawImage(im,i,y,ww,hh)}
  const dusk=mode==='race'&&trackId==='dusk';
- if(dusk)drawDuskBackdrop(x,w);
+ if(freeConnection)GearLineFreeOnline.drawScenery(x,w,freeConnection.position(car.dist)*GearLineFreeOnline.pixelsPerMeter,cleanAsphalt);
+ else if(dusk)drawDuskBackdrop(x,w);
  else if(ready(scene.forest)){const ww=1560,off=((roadScroll*.035)%(ww*2)+ww*2)%(ww*2);for(let i=-1;i<4;i++){let pos=i*ww-off; x.save();x.translate(pos+(i%2!==0?ww:0),0);x.scale(i%2!==0?-1:1,1);x.drawImage(scene.forest,0,0,ww,285);x.restore();}}
  if(mode==='race')drawGrandstands(x,w,roadScroll);
  const top=270, bottom=600;
  const hasDragAsphalt=mode==='race'&&ready(dragAsphalt);
  const finishX=mode==='race'?raceCameraCenter+raceScreenOffset()+raceCarWidth/2
   +(raceDistance-raceCameraDistance())*racePixelsPerMeter:0;
+ if(!freeConnection){
  x.fillStyle='#292d30';x.fillRect(0,top,w,bottom-top);
  if(hasDragAsphalt)drawDragAsphalt(x,w,top,bottom-top,finishX);
  else if(ready(cleanAsphalt)){const size=330;for(let xx=-((roadScroll%size+size)%size);xx<w;xx+=size)x.drawImage(cleanAsphalt,xx,top,size,size);}
@@ -1194,11 +1264,15 @@ function drawRoad(t,dt){
  }else if(!hasDragAsphalt){
   x.fillStyle='#b99a39';x.fillRect(0,430,w,11);
  }
- const ground=mode==='free'?laneY:565,width=mode==='free'?300+(laneY-360)*.18:raceCarWidth;
+ }
+ const ground=freeConnection?GearLineFreeOnline.ground(laneY):mode==='free'?laneY:565;
+ const width=freeConnection?GearLineFreeOnline.carWidth(laneY):mode==='free'?300+(laneY-360)*.18:raceCarWidth;
  const cx=mode==='race'?raceCarX(car):410;
+ const freeDrivers=visibleFreeDrivers(w,cx,t,dt);
  if(mode==='race'&&!hasDragAsphalt)drawFallbackFinish(x,finishX,w);
  if(mode==='race')drawRaceSpeedLines(x,w);
  else if(car.speed>55){const strength=Math.min(.32,(car.speed-55)/400);x.save();x.globalAlpha=strength;x.strokeStyle='#c4d7e4';x.lineWidth=1.2;const span=w+200,count=Math.ceil(22*w/1000);for(let i=0;i<count;i++){let px=((i*173-roadScroll*1.3)%span+span)%span-100,py=100+(i*73)%480;x.beginPath();x.moveTo(px,py);x.lineTo(px+25+car.speed*.45,py);x.stroke()}x.restore();}
+ for(const entry of freeDrivers)if(entry.y<ground)drawFreeDriver(x,entry);
  x.fillStyle='#080c10aa';x.beginPath();x.ellipse(cx,ground,width*.45,9,0,0,7);x.fill();
  if(rival){
   const rivalWidth=width*rivalCarScale;
@@ -1206,8 +1280,9 @@ function drawRoad(t,dt){
   if(rivalX>-width/2&&rivalX<w+width/2){
    x.fillStyle='#080c10aa';x.beginPath();x.ellipse(rivalX,410,width*.42,8,0,0,Math.PI*2);x.fill();
    drawRivalSpeedLines(x,rivalX,rivalWidth);
-   vehicle(x,rivalX,410,rivalWidth,rival.wheelAngle,0,false,true);
-   x.font='bold 13px Arial';x.textAlign='center';x.fillStyle='#f5eddb';x.fillText('RIVAL',rivalX,286);x.textAlign='left';
+   vehicle(x,rivalX,410,rivalWidth,rival.wheelAngle,0,false,rival);
+   if(onlineRace)drawPilotTag(x,rival,rivalX,410,rivalWidth,rival.model,w);
+   else{x.font='bold 13px Arial';x.textAlign='center';x.fillStyle='#f5eddb';x.fillText('RIVAL',rivalX,286);x.textAlign='left';}
   }
  }
  const tilt=pitch+(mode==='free'?lateral*.00045:0);
@@ -1223,6 +1298,8 @@ function drawRoad(t,dt){
  if(dt>0)exhaustEffects.update(dt,tailpipe,car.speed,accelerating,car.rpm,Boolean(activeSetup().upgrades.backfire)&&countdown<=0&&car.finishTime===null,audio);
  exhaustEffects.draw(x,tailpipe);
  vehicle(x,cx,ground,width,wheelAngle,tilt,!paused&&brakePressed());
+ for(const entry of freeDrivers)if(entry.y>=ground)drawFreeDriver(x,entry);
+ for(const entry of freeDrivers)drawPilotTag(x,entry.peer,entry.x,entry.y,entry.size,entry.model,w);
  if(mode==='race'){
  if(countdown>0||car.elapsed<1.2)drawStartLights(x,w/2);
  }
@@ -1246,6 +1323,11 @@ function shift(dir){
 }
 function stopGame(){
  stopRivalAudio();
+ if(freeConnection){
+  freeConnection.close();
+  freeConnection=null;
+  freeDriverPaint.clear();
+ }
  if(onlineRace){
   onlineRace.close(!onlineRace.state?.result);
   onlineRace=null;
@@ -1291,7 +1373,8 @@ function updateOnlineRace(dt,now){
  const other=state.players.find(player=>player.id!==connection.id);
  if(!rival){
   const model=vehicles[other.vehicleId]||gol;
-  rival={...newRun(),model,upgrades:{exhaust:other.exhaust===true},buildName:'',color:other.color??0,paint:{},wheelAngle:0};
+  rival={...newRun(),model,upgrades:{exhaust:other.exhaust===true},buildName:'',color:other.color??0,paint:{},wheelAngle:0,
+   name:other.name??'Rival',level:other.level,crewTag:other.crewTag};
   $('rivalchip').textContent='Rival: '+model.chip;
   $('rivalchip').classList.remove('hidden');
   $('mapRival').classList.remove('hidden');
@@ -1352,6 +1435,30 @@ function finishOnlineRace(state,own,other){
  show('result');
 }
 
+function startFreeOnline(){
+ if(!data?.vehicleId){show('dealer');return;}
+ if(!accounts?.syncFreeDrive||typeof crypto.randomUUID!=='function'){
+  toast('O Modo Livre Online precisa de uma conta online e conexão segura.');
+  return;
+ }
+ startGame('free');
+ if(!running||mode!=='free')return;
+ const model=selectedVehicle();
+ laneY=GearLineFreeOnline.spawnLane;
+ $('pause').classList.add('hidden');
+ $('pauseHelp')?.classList.add('hidden');
+ GearLineFreeOnline.loadScenery();
+ $('driving').dataset.freeOnline='true';
+ $('gametype').textContent='Modo livre • avenida compartilhada';
+ $('gametitle').innerHTML='AVENIDA <span style="color:var(--lime)">URBANA.</span>';
+ $('modechip').textContent='Conectando à avenida…';
+ freeConnection=GearLineFreeOnline.connect(accounts,{
+  id:model.id,color:data[model.colorKey]??0,exhaust:Boolean(activeSetup().upgrades.exhaust)
+ },()=>({
+  dist:car.dist,lane:laneY,speed:paused?0:car.speed,braking:!paused&&brakePressed()
+ }),status=>{if($('modechip').textContent!==status)$('modechip').textContent=status;});
+}
+
 function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connection=null){
  if(!data){toast('Entre no perfil antes de dirigir.');return}
  if(!data.vehicleId){show('dealer');return;}
@@ -1361,7 +1468,9 @@ function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connec
  trackId=mode==='race'&&selectedTrack==='dusk'?'dusk':'night';
  raceDistance=raceTracks[trackId].distance;
  $('driving').dataset.mode=mode;
+ delete $('driving').dataset.freeOnline;
  car=newRun();
+ trafficHitAt=-Infinity;
  freeDrivePaid=0;
  freeDriveSaved=0;
  rival=mode==='race'&&raceKind==='bot'?createRival(activeSetup().upgrades):null;
@@ -1375,6 +1484,7 @@ function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connec
  penalty=false;
  $('pause').textContent='Ⅱ PAUSAR';
  $('pause').classList.toggle('hidden',Boolean(onlineRace));
+ $('pauseHelp')?.classList.toggle('hidden',Boolean(onlineRace));
  $('gametype').textContent=mode==='race'?(trackId==='dusk'?'Autódromo ao entardecer':'Reta noturna')+' • '+(rival?'Contra bot':'Contra o relógio'):'Modo livre • condução livre';
  $('gametitle').innerHTML=mode==='race'?'LARGADA <span style="color:var(--lime)">'+raceDistance+' M.</span>':'AVENIDA <span style="color:var(--lime)">NOTURNA.</span>';
  $('carchip').textContent=selectedVehicle().chip;
@@ -1440,7 +1550,8 @@ function finishRace(){
  show('result');
 }
 $('raceRetry').onclick=()=>startGame('race',rival?'bot':'clock',trackId);
-$('pause').onclick=()=>{if(!running)return;paused=!paused;$('pause').textContent=paused?'▶ RETOMAR':'Ⅱ PAUSAR';$('racemsg').textContent=paused?'PAUSADO':'';if(paused){keys={};touch={throttle:false,brake:false}}};
+function canPauseGame(){return running&&!freeConnection&&!onlineRace;}
+$('pause').onclick=()=>{if(!canPauseGame())return;paused=!paused;$('pause').textContent=paused?'▶ RETOMAR':'Ⅱ PAUSAR';$('racemsg').textContent=paused?'PAUSADO':'';if(paused){keys={};touch={throttle:false,brake:false}}};
 function bindShiftButton(id,direction){
  const button=$(id);
  button.addEventListener('pointerdown',event=>{
@@ -1466,7 +1577,7 @@ for(const event of ['keydown','keyup']){
  });
 }
 hold('throttle',()=>touch.throttle=true,()=>touch.throttle=false);hold('brake',()=>touch.brake=true,()=>touch.brake=false);hold('steerL',()=>keys.a=true,()=>keys.a=false);hold('steerR',()=>keys.d=true,()=>keys.d=false);
-window.addEventListener('keydown',e=>{if(typeof e.key!=='string'||!running||e.target?.closest?.('.music-player'))return;let k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();if(e.key==='Escape'&&running){$('pause').click();return}if((k==='e'||k==='q')&&!e.repeat){shift(k==='e'?1:-1);return}keys[k]=true});window.addEventListener('keyup',e=>{if(typeof e.key==='string')keys[e.key.toLowerCase()]=false});window.addEventListener('blur',()=>{keys={};touch={throttle:false,brake:false};if(document.hidden&&running&&!paused){paused=true;$('pause').textContent='▶ RETOMAR';$('racemsg').textContent='PAUSADO'}})
+window.addEventListener('keydown',e=>{if(typeof e.key!=='string'||!running||e.target?.closest?.('.music-player'))return;let k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase()))e.preventDefault();if(e.key==='Escape'&&running){$('pause').click();return}if((k==='e'||k==='q')&&!e.repeat){shift(k==='e'?1:-1);return}keys[k]=true});window.addEventListener('keyup',e=>{if(typeof e.key==='string')keys[e.key.toLowerCase()]=false});window.addEventListener('blur',()=>{keys={};touch={throttle:false,brake:false};if(document.hidden&&canPauseGame()&&!paused){paused=true;$('pause').textContent='▶ RETOMAR';$('racemsg').textContent='PAUSADO'}})
 async function initializeAccount(){
  $('logout').classList.add('hidden');
  $('topuser').textContent='CONTA ONLINE';

@@ -275,3 +275,9 @@
 @media(orientation:landscape) and (max-height:600px){.race-notice.passive{top:70px;bottom:auto;right:12px;max-width:180px;opacity:.84}}
 #home .menu{grid-template-columns:repeat(2,minmax(0,1fr))}.group-menu .tile h3{margin-top:22px}.group-menu .tile p{max-width:none}
 @media(max-width:600px){#home .menu,.group-menu .dealer-grid{grid-template-columns:minmax(0,1fr)}}
+
+@media (orientation:landscape) and (pointer:coarse){
+ #driving[data-free-online] .hud{display:flex;top:calc(max(6px,env(safe-area-inset-top)) + 45px);left:max(8px,env(safe-area-inset-left));max-width:26vw;pointer-events:none}
+ #driving[data-free-online] .hud .chip{padding:5px 8px;font-size:11px;letter-spacing:.2px}
+ #driving[data-free-online] .hud .chip:not(#modechip){display:none}
+}
