@@ -814,6 +814,7 @@ function stopRivalAudio(){
 function beep(freq,dur){try{let o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;g.gain.value=.04;o.connect(g).connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.stop(audio.currentTime+dur)}catch(e){}}
 const exhaustEffects=createExhaustEffects();
 let lastHudFrame=-Infinity;
+let lastDuelEngineFrame=-Infinity;
 
 function loop(t){
  if(!running)return;
@@ -829,7 +830,10 @@ function loop(t){
   lastHudFrame=t;
   renderHud();
  }
- engineSound();
+ if(!onlineRace||!touchDisplay.matches||t-lastDuelEngineFrame>=mobileOnlineUpdateMs){
+  lastDuelEngineFrame=t;
+  engineSound();
+ }
  raf=requestAnimationFrame(loop);
 }
 const raceTracks={
@@ -1215,7 +1219,8 @@ function visibleFreeDrivers(width,center,t,dt){
  if(!freeConnection)return [];
  const avenue=GearLineFreeOnline;
  const origin=freeConnection.position(car.dist);
- const blend=Math.min(1,dt*14);
+ freeConnection.sampleLocal(car.dist,laneY,t);
+ const blend=1-Math.exp(-dt*10);
  const nearby=[];
  function place(peer,distance,lane){
   const model=vehicles[peer.vehicle];
@@ -1225,12 +1230,13 @@ function visibleFreeDrivers(width,center,t,dt){
   if(x>=-size&&x<=width+size)nearby.push({peer,model,x,size,y:avenue.ground(lane)});
  }
  for(const peer of freeConnection.drivers.values()){
-  const distance=avenue.currentDistance(peer,t);
-  if(distance===null)continue;
-  peer.shownDistance=Math.max(peer.shownDistance,peer.shownDistance+(distance-peer.shownDistance)*blend);
-  peer.shownLane+=(peer.lane-peer.shownLane)*blend;
+  const relative=freeConnection.relativePosition(peer,t);
+  if(!relative)continue;
+  if(peer.shownGap===null)peer.shownGap=relative.gap;
+  else peer.shownGap+=(relative.gap-peer.shownGap)*blend;
+  peer.shownLane+=(relative.lane-peer.shownLane)*blend;
   peer.wheelAngle=(peer.wheelAngle+peer.speed/3.6*dt/.29)%(Math.PI*2);
-  place(peer,peer.shownDistance,peer.shownLane);
+  place(peer,origin+peer.shownGap,peer.shownLane);
  }
  for(const traffic of avenue.nearbyTraffic(origin,(performance.timeOrigin+t)/1000))place(traffic,traffic.distance,traffic.lane);
  return nearby.sort((a,b)=>a.y-b.y);
@@ -1438,8 +1444,10 @@ function updateOnlineRace(dt,now){
  car.elapsed=Math.max(0,(state.tick-state.startsAtTick)*.02);
  penalty=own.falseStart;
  roadScroll=raceCameraDistance()*115;
- $('racemsg').textContent=penalty?'QUEIMOU!':countdown>0?String(Math.ceil(countdown))
+ const raceMessage=penalty?'QUEIMOU!':countdown>0?String(Math.ceil(countdown))
   :own.time!==null?'Linha cruzada!':car.elapsed<1.2?'VAI!':Math.ceil(raceDistance-own.distance)+' m restantes';
+ const messageElement=$('racemsg');
+ if(messageElement.textContent!==raceMessage)messageElement.textContent=raceMessage;
  if(state.phase==='finished')finishOnlineRace(state,own,other);
 }
 

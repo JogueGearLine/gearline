@@ -2,18 +2,49 @@ const GearLineFreeOnline=(()=>{
  const syncIntervalMs=200;
  const maximumPredictionMs=180;
  const stalePositionMs=1200;
+ const presentationDelayMs=420;
 
- function currentDistance(peer,now){
-  const age=peer.ageAtReceiptMs+Math.max(0,now-peer.receivedAt);
-  if(age>stalePositionMs)return null;
-  const predicted=peer.distance+peer.speed/3.6*Math.min(maximumPredictionMs,age)/1000;
-  return Math.max(peer.minimumDistance??-Infinity,predicted);
+ function recordPosition(history,position){
+  const previous=history.at(-1);
+  if(previous&&position.at<=previous.at+8)return;
+  history.push(position);
+  while(history.length>2&&history[1].at<position.at-stalePositionMs)history.shift();
+ }
+
+ function samplePosition(history,at,predictionMs=0){
+  if(!history.length||at<history[0].at)return null;
+  for(let index=1;index<history.length;index++){
+   const next=history[index];
+   if(at>next.at)continue;
+   const previous=history[index-1];
+   const ratio=(at-previous.at)/(next.at-previous.at);
+   return {
+    distance:previous.distance+(next.distance-previous.distance)*ratio,
+    lane:previous.lane+(next.lane-previous.lane)*ratio
+   };
+  }
+  const latest=history.at(-1);
+  const lead=Math.min(predictionMs,at-latest.at)/1000;
+  return {distance:latest.distance+latest.speed/3.6*lead,lane:latest.lane};
+ }
+
+ function relativePosition(peer,localHistory,now){
+  if(now-peer.history.at(-1).at>stalePositionMs)return null;
+  const at=now-presentationDelayMs;
+  const local=samplePosition(localHistory,at);
+  const remote=samplePosition(peer.history,at,maximumPredictionMs);
+  if(!local||!remote)return null;
+  const separation=remote.distance-local.distance;
+  const gap=Math.sign(separation)*Math.max(0,Math.abs(separation)-.65);
+  return {gap,lane:remote.lane};
  }
 
  function connect(api,vehicle,readDrive,onStatus){
   const session=crypto.randomUUID();
   const drivers=new Map();
+  const localHistory=[];
   let offset=0, joined=false, closed=false, pending=false, timer;
+  let oneWay=null;
   const leave=()=>api.leaveFreeDrive(session).catch(()=>{});
 
   async function sync(){
@@ -29,31 +60,30 @@ const GearLineFreeOnline=(()=>{
     if(!joined){joined=true;offset=result.distance-drive.dist;}
     if(closed)return;
     const now=performance.now();
-    const oneWay=Math.min(250,(now-sentAt)/2);
+    const measuredOneWay=Math.min(250,(now-sentAt)/2);
+    oneWay=oneWay===null?measuredOneWay:oneWay*.8+measuredOneWay*.2;
     delay=Math.max(0,syncIntervalMs-(now-sentAt));
-    const active=new Set();
     for(const peer of result.drivers){
-     active.add(peer.id);
      const previous=drivers.get(peer.id);
      const ageAtReceiptMs=(Number.isFinite(peer.ageMs)?Math.max(0,peer.ageMs):0)+oneWay;
-     const current={...peer,receivedAt:now,ageAtReceiptMs};
-     const distance=currentDistance(current,now);
-     if(distance===null){drivers.delete(peer.id);continue;}
-     const previousDistance=previous?currentDistance(previous,now):null;
+     if(ageAtReceiptMs>stalePositionMs)continue;
+     const last=previous?.history.at(-1);
+     const reusable=last&&now-last.at<=stalePositionMs&&peer.distance>=last.distance-1;
+     const history=reusable?previous.history:[];
+     recordPosition(history,{...peer,at:now-ageAtReceiptMs});
      drivers.set(peer.id,{
-      ...current,minimumDistance:previousDistance??-Infinity,
-      shownDistance:previous&&previousDistance!==null?previous.shownDistance:distance,
-      shownLane:previous?.shownLane??peer.lane,
-      wheelAngle:previous?.wheelAngle??0
+      ...peer,history,shownGap:reusable?previous.shownGap:null,
+      shownLane:reusable?previous.shownLane:peer.lane,
+      wheelAngle:reusable?previous.wheelAngle:0
      });
     }
-    for(const id of drivers.keys())if(!active.has(id))drivers.delete(id);
+    for(const [id,peer] of drivers)if(now-peer.history.at(-1).at>stalePositionMs)drivers.delete(id);
     const count=result.player_count??drivers.size+1;
     onStatus(count===1?'1 piloto na pista':count+' pilotos na pista');
    }catch(error){
     if(closed)return;
-    drivers.clear();
     if(error.message?.includes('GL_DRIVE_SESSION_ENDED')){
+     drivers.clear();
      closed=true;
      onStatus('Sessão online encerrada');
      return;
@@ -75,6 +105,10 @@ const GearLineFreeOnline=(()=>{
   return {
    drivers,
    position(distance){return offset+distance;},
+   sampleLocal(distance,lane,now){
+    if(joined)recordPosition(localHistory,{at:now,distance:offset+distance,lane,speed:0});
+   },
+   relativePosition(peer,now){return relativePosition(peer,localHistory,now);},
    close(){
     closed=true;
     clearTimeout(timer);
@@ -163,5 +197,5 @@ const GearLineFreeOnline=(()=>{
    return along&&across&&Math.max(along[0],across[0])<Math.min(along[1],across[1]);
   });
  }
- return {connect,currentDistance,loadScenery,drawScenery,nearbyTraffic,hitsTraffic,ground,carWidth,pixelsPerMeter,spawnLane};
+ return {connect,recordPosition,relativePosition,loadScenery,drawScenery,nearbyTraffic,hitsTraffic,ground,carWidth,pixelsPerMeter,spawnLane};
 })();
