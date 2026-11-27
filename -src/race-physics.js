@@ -4,7 +4,8 @@ const GearLineRacePhysics=(()=>{
   gol:{maxRpm:6800,speedCap:245,driveForce:15.7,torquePeak:4000,roadLoad:.92,ratios:[0,3.55,1.97,1.32,1,.80]},
   peugeot206:{maxRpm:7000,speedCap:207,driveForce:13.2,torquePeak:4650,turboAvailable:true,ratios:[0,3.62,1.97,1.36,1.04,.80]},
   astra:{maxRpm:6500,speedCap:224,driveForce:15.0,torquePeak:4250,roadLoad:1.02,turboAvailable:true,ratios:[0,3.58,1.87,1.27,.96,.76]},
-  chevette:{maxRpm:6200,speedCap:178,driveForce:12.1,torquePeak:3400,roadLoad:.87,turboAvailable:true,ratios:[0,3.76,2.16,1.40,1,.82]}
+  chevette:{maxRpm:6200,speedCap:178,driveForce:12.1,torquePeak:3400,roadLoad:.87,turboAvailable:true,ratios:[0,3.76,2.16,1.40,1,.82]},
+  lancer:{maxRpm:7500,speedCap:250,driveForce:24,torquePeak:3900,roadLoad:1.18,factoryTurbo:true,ratios:[0,2.86,1.95,1.44,1.10,.76]}
  };
 
  const ratios=[0,3.45,1.94,1.29,.97,.80];
@@ -53,7 +54,7 @@ const GearLineRacePhysics=(()=>{
    ?(takeoffRpm+(1-driver.clutch)*550)*launchBlend:0;
   const target=inGear?Math.max(900,coupled,launchFloor):accel?model.maxRpm:900;
   driver.rpm+=(Math.min(model.maxRpm,target)-driver.rpm)*Math.min(1,dt*9);
-  driver.boost=updateTurbo(driver.boost,driver.rpm,accel&&!brake,upgrades.turbo,dt);
+  driver.boost=updateTurbo(driver.boost,driver.rpm,accel&&!brake,model.factoryTurbo||upgrades.turbo,dt);
   const torque=engineTorque(driver.rpm,upgrades,model)*(1+.42*driver.boost);
   const pulling=inGear&&accel&&!brake&&driver.shiftLock<=0&&coupled<model.maxRpm;
   const speedCap=model.speedCap+(upgrades.turbo?23:0);

@@ -41,10 +41,11 @@ function createGearLineAccounts() {
   base.peugeotColor=Math.floor(number(saved?.peugeotColor,0,4,0));
   base.astraColor=Math.floor(number(saved?.astraColor,0,4,0));
   base.chevetteColor=Math.floor(number(saved?.chevetteColor,0,4,0));
+  base.lancerColor=Math.floor(number(saved?.lancerColor,0,4,0));
   const hasGarage=Object.hasOwn(saved??{},'ownedVehicles');
   base.usd=number(saved?.usd,0,1e9,hasGarage?base.usd:0);
   base.ownedVehicles=hasGarage
-   ?['gol','peugeot206','astra','chevette'].filter(id=>Array.isArray(saved.ownedVehicles)&&saved.ownedVehicles.includes(id))
+   ?['gol','peugeot206','astra','chevette','lancer'].filter(id=>Array.isArray(saved.ownedVehicles)&&saved.ownedVehicles.includes(id))
    :['gol','peugeot206'];
   base.vehicleId=base.ownedVehicles.includes(saved?.vehicleId)?saved.vehicleId:base.ownedVehicles[0]??null;
   base.best=Number.isFinite(Number(saved?.best))&&Number(saved?.best)>0?Number(saved?.best):null;
@@ -53,6 +54,7 @@ function createGearLineAccounts() {
   if(base.peugeotSetup)normalizeSetup(base.peugeotSetup,saved?.peugeotSetup);
   if(base.astraSetup)normalizeSetup(base.astraSetup,saved?.astraSetup);
   if(base.chevetteSetup)normalizeSetup(base.chevetteSetup,saved?.chevetteSetup);
+  if(base.lancerSetup)normalizeSetup(base.lancerSetup,saved?.lancerSetup);
   return base;
  }
 

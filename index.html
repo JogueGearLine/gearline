@@ -126,11 +126,12 @@
   <article class="panel specs"><div class="eyebrow">Peugeot</div><h2>Peugeot 206</h2><p class="muted">105 cv • aceita kit turbo</p><button class="btn full" id="buy-peugeot206" type="button">Comprar</button></article>
   <article class="panel specs"><div class="eyebrow">Chevrolet</div><h2>Astra 2.0</h2><p class="muted">121 cv • aceita kit turbo</p><button class="btn full" id="buy-astra" type="button">Comprar</button></article>
   <article class="panel specs"><div class="eyebrow">Chevrolet</div><h2>Chevette SL</h2><p class="muted">1.6 • 75 cv • tração traseira</p><button class="btn full" id="buy-chevette" type="button">Comprar</button></article>
+  <article class="panel specs"><div class="eyebrow">Mitsubishi</div><h2>Lancer Evolution X</h2><p class="muted">2.0 turbo • 295 cv • tração integral</p><button class="btn full" id="buy-lancer" type="button">Comprar</button></article>
  </div>
 </section>
 <section id="garage" class="hidden">
  <div class="hero"><div><div class="eyebrow">Oficina / garagem</div><h1>SUA <span style="color:var(--lime)">MÁQUINA.</span></h1></div><button class="btn secondary" onclick="show('carMenu')">← CARRO</button></div>
- <div class="garagegrid"><div class="panel carstage"><div class="eyebrow" id="garageCarProject">Volkswagen Gol • projeto 001</div><canvas id="carcanvas" width="900" height="360"></canvas><div class="stagefoot"><div><b id="garageCarName">GOL QUADRADO</b><div class="muted" id="garageCarDetail">1.8 aspirado • FWD • 5 marchas</div></div><label class="vehicle-picker">Carro <select id="vehicleChoice"><option value="gol">Gol Quadrado</option><option value="peugeot206">Peugeot 206</option><option value="astra">Astra 2.0</option><option value="chevette">Chevette SL</option></select></label></div></div>
+ <div class="garagegrid"><div class="panel carstage"><div class="eyebrow" id="garageCarProject">Volkswagen Gol • projeto 001</div><canvas id="carcanvas" width="900" height="360"></canvas><div class="stagefoot"><div><b id="garageCarName">GOL QUADRADO</b><div class="muted" id="garageCarDetail">1.8 aspirado • FWD • 5 marchas</div></div><label class="vehicle-picker">Carro <select id="vehicleChoice"><option value="gol">Gol Quadrado</option><option value="peugeot206">Peugeot 206</option><option value="astra">Astra 2.0</option><option value="chevette">Chevette SL</option><option value="lancer">Lancer Evolution X</option></select></label></div></div>
  <div class="panel specs"><div class="eyebrow">Ficha técnica</div><h2>CONFIGURAÇÃO</h2><div class="spec"><label>Potência <b id="gpow">110 cv</b></label><div class="bar"><i id="gpowbar" style="width:35%"></i></div></div><div class="spec"><label>Peso <b id="garageCarWeight">980 kg</b></label><div class="bar"><i style="width:48%"></i></div></div><div class="spec"><label>Tração <b id="garageCarTraction">Dianteira</b></label><div class="bar"><i style="width:72%"></i></div></div><div class="spec"><label>Nitro <b id="gnit">Não instalado</b></label><div class="bar"><i id="gnibar" style="width:0%"></i></div></div><div class="garage-shop-heading"><div class="eyebrow">Peças disponíveis</div><div class="garage-balance"><span class="muted">Saldo</span> <strong id="garageCash"></strong></div></div><div class="garage-tabs" role="group" aria-label="Categorias da garagem">
  <button class="btn secondary" id="garageMotorTab" aria-pressed="true" type="button">Motor</button>
  <button class="btn secondary" id="garageStyleTab" aria-pressed="false" type="button">Customização</button>
@@ -170,17 +171,17 @@
 </section>
 </main><aside id="raceNotice" class="race-notice hidden" aria-label="Convite de corrida" aria-live="polite"><div class="race-notice-copy"><span class="eyebrow">Convite de arrancada</span><strong id="raceNoticePilot"></strong><small id="raceNoticeDetail" class="muted"></small></div><div id="raceNoticeActions" class="row"><button id="raceNoticeAccept" class="btn" type="button">ACEITAR</button><button id="raceNoticeDecline" class="btn ghost" type="button">RECUSAR</button></div><p id="raceNoticeStatus" class="muted" role="status"></p></aside><div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
-<script src="-src/accounts.js?v=20261126-fim-duelo"></script>
+<script src="-src/accounts.js?v=20261127-lancer-vps"></script>
 <script src="-src/exhaust.js?v=20261126-backfire-6000"></script>
 <script src="-src/peugeot206.js"></script>
-<script src="-src/new-vehicles.js?v=20261125-chevette4"></script>
-<script src="-src/new-engine-audio.js?v=20261125-audio"></script>
+<script src="-src/new-vehicles.js?v=20261127-lancer-vps"></script>
+<script src="-src/new-engine-audio.js?v=20261127-lancer-vps"></script>
 <script src="-src/music.js?v=v8.3-release"></script>
-<script src="-src/race-physics.js?v=20261125-cars"></script>
-<script src="-src/pages-config.js?v=20261127-vps"></script>
+<script src="-src/race-physics.js?v=20261127-lancer-vps"></script>
+<script src="-src/pages-config.js?v=20261127-lancer-vps"></script>
 <script src="-src/race-online.js?v=20261126-resposta-duelo"></script>
 <script src="-src/race-lobby.js?v=20261125-cars"></script>
 <script src="-src/community.js?v=20261125-crew"></script>
 <script src="-src/pilots.js?v=20261126-presenca"></script>
 <script src="-src/free-online.js?v=20261126-ultrapassagem"></script>
-<script src="-src/game.js?v=20261126-resposta-duelo"></script></body></html>
+<script src="-src/game.js?v=20261127-lancer-vps"></script></body></html>
