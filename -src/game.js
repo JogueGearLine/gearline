@@ -50,7 +50,7 @@ document.addEventListener('fullscreenchange',()=>{
  $('mobileDisplayStatus').textContent='';
  (fullscreen?$('driving'):document.body).append($('toast'));
 });
-function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';['auth','home','carMenu','raceMenu','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
+function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';['auth','home','carMenu','raceMenu','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();drawHomeCar();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
 function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2200)}
 $('brandHome').onclick=()=>show('home');
 let accounts;
@@ -534,6 +534,26 @@ function drawingContext(canvas,width,height){
 }
 
 const garageCanvas=$('carcanvas');
+const homeCarPreview=$('homeCarPreview');
+if(homeCarPreview){
+ for(const model of Object.values(vehicles)){
+  for(const image of [model.body,model.mask,...model.wheels.map(wheel=>wheel.image)]){
+   if(image&&!image.complete)image.addEventListener('load',drawHomeCar,{once:true});
+  }
+ }
+}
+
+function drawHomeCar(){
+ if(!homeCarPreview||!data||$('home').classList.contains('hidden'))return;
+ const hasCar=Boolean(data.vehicleId);
+ $('homeVehicleLabel').textContent=hasCar?'Sua máquina':'Concessionária';
+ $('homeVehicleDetail').textContent=hasCar?selectedVehicle().name:'Compre seu primeiro carro.';
+ homeCarPreview.classList.toggle('hidden',!hasCar);
+ if(!hasCar)return;
+ const ctx=drawingContext(homeCarPreview,320,145);
+ ctx.clearRect(0,0,320,145);
+ vehicle(ctx,160,132,294,0,0);
+}
 const garageWidth=900,garageHeight=360;
 const garageViewport=new ResizeObserver(([{contentRect}])=>{
  if(contentRect.width>0)drawCar();

@@ -5,9 +5,11 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>GearLine</title>
+<meta name="theme-color" content="#080d12">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="favicon.ico?v=20261125-coroa">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=20261125-coroa">
-<link rel="stylesheet" href="-src/gearline.css?v=20261126-avenida">
+<link rel="stylesheet" href="-src/gearline.css?v=20261126-destaques-v2">
 </head>
 <body>
 <header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
@@ -34,10 +36,16 @@
   <div class="panel specs"><div class="eyebrow">Sua máquina</div><h2 id="profileCarName">VOLKSWAGEN GOL G1</h2><div class="muted" id="profileCarDetail">Quadrado • 1.8 aspirado • Tração dianteira</div><div id="profileCarStats" style="margin-top:18px"><div class="spec"><label>Potência <b id="powtxt">110 cv</b></label><div class="bar"><i id="powbar" style="width:35%"></i></div></div><div class="spec"><label>Nitro <b id="nitxt">Base</b></label><div class="bar"><i id="nibar" style="width:20%"></i></div></div></div><button id="profileGarage" class="btn secondary full" onclick="show('garage')" style="margin-top:10px">ABRIR GARAGEM →</button></div>
  </div>
  <div class="menu">
-  <button class="tile" onclick="show('carMenu')"><span class="num">01</span><div class="eyebrow">Sua máquina</div><h3>VEÍCULOS</h3><p>Concessionária e garagem.</p></button>
-  <button class="tile" onclick="show('raceMenu')"><span class="num">02</span><div class="eyebrow">Na pista</div><h3>CORRIDAS</h3><p>Arrancada e modo livre.</p></button>
-  <button class="tile community-tile" onclick="show('communityMenu')"><span class="num">03</span><div class="eyebrow">Rede GearLine</div><h3>COMUNIDADE</h3><p>Crews, perfis e amizades.</p></button>
-  <button class="tile community-tile" onclick="show('exchange')"><span class="num">04</span><div class="eyebrow">Economia</div><h3>CÂMBIO</h3><p>Converta reais em dólares do jogo.</p></button>
+  <button class="tile home-race" type="button" onclick="show('raceMenu')">
+   <span class="eyebrow">Na pista</span><h3>CORRIDAS</h3><p>Arrancada e modo livre.</p>
+  </button>
+  <button class="tile home-vehicles" type="button" onclick="show(data?.vehicleId?'carMenu':'dealer')">
+   <span class="eyebrow" id="homeVehicleLabel">Concessionária e garagem</span>
+   <h3>VEÍCULOS</h3><p id="homeVehicleDetail">Compre seu primeiro carro.</p>
+   <canvas id="homeCarPreview" class="hidden" width="320" height="145" aria-hidden="true"></canvas>
+  </button>
+  <button class="tile community-tile" onclick="show('communityMenu')"><div class="eyebrow">Rede GearLine</div><h3>COMUNIDADE</h3><p>Crews, perfis e amizades.</p></button>
+  <button class="tile community-tile" onclick="show('exchange')"><div class="eyebrow">Economia</div><h3>CÂMBIO</h3><p>Converta reais em dólares do jogo.</p></button>
  </div>
 </section>
 <section id="carMenu" class="hidden group-menu" aria-labelledby="carMenuTitle">
@@ -162,7 +170,7 @@
 </section>
 </main><aside id="raceNotice" class="race-notice hidden" aria-label="Convite de corrida" aria-live="polite"><div class="race-notice-copy"><span class="eyebrow">Convite de arrancada</span><strong id="raceNoticePilot"></strong><small id="raceNoticeDetail" class="muted"></small></div><div id="raceNoticeActions" class="row"><button id="raceNoticeAccept" class="btn" type="button">ACEITAR</button><button id="raceNoticeDecline" class="btn ghost" type="button">RECUSAR</button></div><p id="raceNoticeStatus" class="muted" role="status"></p></aside><div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
-<script src="-src/accounts.js?v=20261126-free-online"></script>
+<script src="-src/accounts.js?v=20261126-presenca"></script>
 <script src="-src/exhaust.js?v=20261126-backfire-6000"></script>
 <script src="-src/peugeot206.js"></script>
 <script src="-src/new-vehicles.js?v=20261125-chevette4"></script>
@@ -173,6 +181,6 @@
 <script src="-src/race-online.js?v=20261126-duelo-suave"></script>
 <script src="-src/race-lobby.js?v=20261125-cars"></script>
 <script src="-src/community.js?v=20261125-crew"></script>
-<script src="-src/pilots.js?v=20261125-pilots"></script>
+<script src="-src/pilots.js?v=20261126-presenca"></script>
 <script src="-src/free-online.js?v=20261126-movimento-suave"></script>
-<script src="-src/game.js?v=20261126-movimento-suave"></script></body></html>
+<script src="-src/game.js?v=20261126-destaques"></script></body></html>

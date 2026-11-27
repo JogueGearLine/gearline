@@ -133,6 +133,9 @@ function createGearLineAccounts() {
   async joinCrew(id){return check(await client.rpc('gearline_crew_join',{p_crew:id}))},
   async leaveCrew(){return check(await client.rpc('gearline_crew_leave'))},
   async pilots(search='',scope='all'){return check(await client.rpc('gearline_pilot_directory',{p_search:search,p_scope:scope}))},
+  async pilotPresence(ids){
+   return check(await client.rpc('gearline_pilot_presence_tick',{p_pilots:ids}).abortSignal(AbortSignal.timeout(5000)));
+  },
   async friendAction(id,action){return check(await client.rpc('gearline_friend_action',{p_pilot:id,p_action:action}))},
   async invitePilot(id,distance){return check(await client.rpc('gearline_invite_pilot',{p_pilot:id,p_distance:distance}))},
   async raceInvites(){

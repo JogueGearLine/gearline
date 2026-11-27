@@ -6,12 +6,41 @@ const GearLinePilots=(()=>{
  const relation={self:'Seu perfil',friend:'Amigo',outgoing:'Pedido enviado',incoming:'Pedido recebido',none:''};
  const time=value=>Number.isFinite(Number(value))&&Number(value)>0?Number(value).toFixed(2)+'s':'—';
  let session=null,notifications=null,screen='auth';
+ const presenceIntervalMs=25000;
+ function presenceBadge(current,id){
+  const badge=node('small','','pilot-presence');
+  badge.dataset.pilotPresence=id;
+  setPresenceBadge(badge,current.online);
+  return badge;
+ }
+ function setPresenceBadge(badge,online){
+  const status=online===null?'':online.has(badge.dataset.pilotPresence)?'Online':'Offline';
+  if(badge.textContent!==status)badge.textContent=status;
+  badge.hidden=!status;
+  badge.classList.toggle('is-online',status==='Online');
+ }
+ async function syncPresence(current){
+  if(notifications!==current||current.presencePending||document.hidden||!current.presenceTimer)return;
+  const directory=session,ids=directory?.ids;
+  current.presencePending=true;
+  try{
+   const online=new Set(await current.api.pilotPresence(ids??[]));
+   if(directory&&notifications===current&&session===directory&&directory.ids===ids)directory.online=online;
+  }catch{
+   if(directory&&notifications===current&&session===directory&&directory.ids===ids)directory.online=null;
+  }finally{
+   current.presencePending=false;
+   if(notifications!==current)return;
+   if(session&&(session!==directory||session.ids!==ids)){void syncPresence(current);return}
+   if(directory)document.querySelectorAll('[data-pilot-presence]').forEach(badge=>setPresenceBadge(badge,directory.online));
+  }
+ }
  function renderCard(current,pilot){
   current.selected=pilot?.id??null;
   const content=el('pilotPublicContent');content.replaceChildren();
   if(!pilot){content.append(node('h2','ESCOLHA UM PILOTO'),node('p','Veja os resultados e adicione amigos.','muted'));return}
   const identity=node('div','','public-pilot-identity'),badge=node('div',pilot.name.slice(0,2).toUpperCase(),'avatar'),info=node('div');
-  info.append(node('h2',pilot.name),node('p','NÍVEL '+pilot.level+(relation[pilot.relationship]?' • '+relation[pilot.relationship].toUpperCase():''),'muted'));
+  info.append(node('h2',pilot.name),node('p','NÍVEL '+pilot.level+(relation[pilot.relationship]?' • '+relation[pilot.relationship].toUpperCase():''),'muted'),presenceBadge(current,pilot.id));
   identity.append(badge,info);content.append(identity,node('p',pilot.crew?`[${pilot.tag}] ${pilot.crew}`:'Sem Crew','public-crew'));
   const stats=node('div','','stats public-stats');
   for(const [label,value] of [['Corridas',pilot.races],['Vitórias',pilot.wins],['Melhor 402 m',time(pilot.best)],['Melhor 600 m',time(pilot.best600)]]){
@@ -33,9 +62,12 @@ const GearLinePilots=(()=>{
  function renderList(current,rows){
   if(session!==current)return;
   const list=el('pilotDirectory');list.replaceChildren();
-  for(const p of rows){const item=node('li'),info=node('div');info.append(node('strong',p.name),node('small',`Nível ${p.level}${p.tag?' · ['+p.tag+']':''}${relation[p.relationship]?' · '+relation[p.relationship]:''}`,'muted'));item.append(info,button('VER PERFIL',()=>{renderCard(current,p);if(window.innerWidth<=700)el('pilotPublicCard').scrollIntoView({block:'start'})}));list.append(item)}
+  current.ids=rows.map(p=>p.id);
+  current.online=null;
+  for(const p of rows){const item=node('li'),info=node('div');info.append(node('strong',p.name),node('small',`Nível ${p.level}${p.tag?' · ['+p.tag+']':''}${relation[p.relationship]?' · '+relation[p.relationship]:''}`,'muted'),presenceBadge(current,p.id));item.append(info,button('VER PERFIL',()=>{renderCard(current,p);if(window.innerWidth<=700)el('pilotPublicCard').scrollIntoView({block:'start'})}));list.append(item)}
   if(!rows.length)list.append(node('li','Nenhum piloto encontrado.','muted'));
   renderCard(current,rows.find(p=>p.id===current.selected)??rows[0]);
+  if(notifications)void syncPresence(notifications);
  }
  async function refresh(current){const rows=await current.api.pilots(el('pilotSearch').value.trim(),current.scope);renderList(current,rows)}
  async function operate(current,action,success=''){
@@ -82,12 +114,30 @@ const GearLinePilots=(()=>{
   finally{current.busy=false;if(notifications===current){renderNotice(current);void poll(current)}}
  }
  el('raceNoticeAccept').onclick=()=>answer('accept');el('raceNoticeDecline').onclick=()=>answer('decline');
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&notifications)void poll(notifications)});
+ document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&notifications){void poll(notifications);void syncPresence(notifications)}
+ });
  return {
-  open(api){const current={api,scope:'all',selected:null,busy:false};session=current;window.scrollTo(0,0);selectScope(current,'all');el('pilotDirectory').replaceChildren();renderCard(current,null);operate(current,async()=>{})},
+  open(api){const current={api,scope:'all',selected:null,busy:false,ids:[],online:null};session=current;window.scrollTo(0,0);selectScope(current,'all');el('pilotDirectory').replaceChildren();renderCard(current,null);operate(current,async()=>{})},
   close(){session=null},
   screen(id){screen=id;const parent=id==='driving'?el('driving'):document.body;if(el('raceNotice').parentElement!==parent)parent.append(el('raceNotice'));if(notifications)renderNotice(notifications)},
-  start(api){this.stop();if(typeof api.raceInvites!=='function')return;const current={api,rows:[],loading:false,busy:false};notifications=current;current.timer=setInterval(()=>void poll(current),3000);void poll(current)},
-  stop(){if(notifications)clearInterval(notifications.timer);notifications=null;el('raceNotice').classList.add('hidden');el('raceNoticeStatus').textContent=''}
+  start(api){
+   this.stop();
+   if(typeof api.raceInvites!=='function')return;
+   const current={api,rows:[],loading:false,busy:false};
+   notifications=current;
+   current.timer=setInterval(()=>void poll(current),3000);
+   if(typeof api.pilotPresence==='function'){
+    current.presenceTimer=setInterval(()=>void syncPresence(current),presenceIntervalMs);
+    void syncPresence(current);
+   }
+   void poll(current);
+  },
+  stop(){
+   if(notifications){clearInterval(notifications.timer);clearInterval(notifications.presenceTimer)}
+   notifications=null;
+   el('raceNotice').classList.add('hidden');
+   el('raceNoticeStatus').textContent='';
+  }
  };
 })();
