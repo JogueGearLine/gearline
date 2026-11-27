@@ -125,6 +125,34 @@ function createGearLineAccounts() {
   return result;
  }
 
+ function finishRaceInvite(id){
+  const current=account;
+  if(!current)return Promise.resolve(false);
+  const previous=current.raceInviteCleanup??Promise.resolve();
+  const cleanup=previous.then(async()=>{
+   for(let attempt=0;attempt<2&&account===current;attempt++){
+    try{
+     check(await client.rpc('gearline_race_invite_action',{p_invite:id,p_action:'cancel'})
+      .abortSignal(AbortSignal.timeout(4000)));
+     return true;
+    }catch(error){
+     // The other pilot may already have closed the shared invite.
+     if(error?.message==='GL_INVITE_UNAVAILABLE')return true;
+    }
+   }
+   return false;
+  });
+  current.raceInviteCleanup=cleanup;
+  return cleanup;
+ }
+
+ async function waitForRaceInviteCleanup(){
+  const current=account;
+  if(!current)return;
+  await current.raceInviteCleanup;
+  if(account!==current)throw new Error('GL_SIGN_IN');
+ }
+
  return {
   load,save,flush,
   exchange(lots,progress){return socialPurchase('gearline_exchange',{p_lots:lots},progress)},
@@ -137,14 +165,20 @@ function createGearLineAccounts() {
    return check(await client.rpc('gearline_pilot_presence_tick',{p_pilots:ids}).abortSignal(AbortSignal.timeout(5000)));
   },
   async friendAction(id,action){return check(await client.rpc('gearline_friend_action',{p_pilot:id,p_action:action}))},
-  async invitePilot(id,distance){return check(await client.rpc('gearline_invite_pilot',{p_pilot:id,p_distance:distance}))},
+  finishRaceInvite,
+  async invitePilot(id,distance){
+   await waitForRaceInviteCleanup();
+   return check(await client.rpc('gearline_invite_pilot',{p_pilot:id,p_distance:distance}));
+  },
   async raceInvites(){
+   await waitForRaceInviteCleanup();
    const fields='id,sender_id,sender_name,recipient_name,distance,status,sender_ready,recipient_ready';
    const rows=check(await client.from('gearline_race_invites').select(fields)
     .in('status',['pending','accepted']).order('created_at',{ascending:false}).limit(30));
    return rows.map(row=>({...row,outgoing:row.sender_id===account?.id}));
   },
   async sendRaceInvite(pilot,distance){
+   await waitForRaceInviteCleanup();
    return check(await client.rpc('gearline_create_race_invite',{p_pilot:pilot,p_distance:distance}));
   },
   async actOnRaceInvite(id,action){

@@ -1466,7 +1466,9 @@ function updateOnlineRace(dt,now){
  wheelAngle=(wheelAngle+follow(car,own))%(Math.PI*2);
  rival.wheelAngle=(rival.wheelAngle+follow(rival,other))%(Math.PI*2);
  updateRivalAudio(other,state,now);
- countdown=Math.max(0,(state.startsAtTick-state.tick)*.02);
+ const latestState=connection.state;
+ const launchTick=Number.isFinite(latestState?.tick)?latestState.tick:state.tick;
+ countdown=Math.max(0,(state.startsAtTick-launchTick)*.02);
  car.elapsed=Math.max(0,(state.tick-state.startsAtTick)*.02);
  penalty=own.falseStart;
  roadScroll=raceCameraDistance()*115;
@@ -1478,6 +1480,9 @@ function updateOnlineRace(dt,now){
 }
 
 function finishOnlineRace(state,own,other){
+ void onlineRace.finishInvite().then(closed=>{
+  if(!closed&&!$('result').classList.contains('hidden'))toast('Não foi possível fechar a sala. Confira em Convites.');
+ });
  const {winnerId,tied,abandoned}=state.result;
  const won=winnerId===own.id;
  const time=value=>value===null?'—':value.toFixed(2)+'s';

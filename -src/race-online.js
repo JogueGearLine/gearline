@@ -36,20 +36,22 @@ const GearLineOnlineRace=(()=>{
   let nextShift=0;
   let failures=0;
   const history=[];
-  let oneWayMs=0;
   let packetIntervalMs=60;
+  let packetJitterMs=0;
   let lastRoundTripMs=null;
   let presentationTick=null;
   let lastSampleAt=null;
   const connection={
    id,state:null,failed:false,
+   finishInvite(){return api.finishRaceInvite(inviteId)},
    shift(direction){nextShift=direction},
    sample(now){
     if(!history.length)return connection.state;
     const latest=history[history.length-1];
     if(latest.state.phase==='finished')return latest.state;
-    const bufferMs=Math.min(220,Math.max(90,packetIntervalMs+35));
-    const desiredTick=latest.state.tick+(Math.max(0,now-latest.receivedAt)+latest.oneWayMs-bufferMs)/tickMs;
+    // Keep enough history for the next packet, even when request times vary.
+    const arrivalDelayMs=Math.max(45,Math.min(280,packetIntervalMs*.7+25+packetJitterMs*1.5));
+    const desiredTick=latest.state.tick+(Math.max(0,now-latest.receivedAt)-arrivalDelayMs)/tickMs;
     const earliestTick=history[0].state.tick;
     const latestTick=latest.state.tick+(latest.state.phase==='racing'?maxPredictionMs/tickMs:0);
     if(presentationTick===null){
@@ -105,12 +107,16 @@ const GearLineOnlineRace=(()=>{
       connection.state=state;
       const receivedAt=performance.now();
       lastRoundTripMs=receivedAt-sentAt;
-      const measuredOneWay=Math.min(250,lastRoundTripMs/2);
-      oneWayMs=oneWayMs?oneWayMs*.75+measuredOneWay*.25:measuredOneWay;
       if(Number.isFinite(state.tick)){
-       const entry={state,receivedAt,oneWayMs},last=history[history.length-1];
+       const entry={state,receivedAt},last=history[history.length-1];
        if(!last||state.tick>last.state.tick){
-        if(last)packetIntervalMs=packetIntervalMs*.75+Math.min(260,receivedAt-last.receivedAt)*.25;
+        if(last){
+         const interval=Math.min(420,receivedAt-last.receivedAt);
+         packetJitterMs=packetJitterMs*.8+Math.abs(interval-packetIntervalMs)*.2;
+         packetIntervalMs=packetIntervalMs*.75+interval*.25;
+        }else{
+         packetIntervalMs=Math.max(60,Math.min(420,lastRoundTripMs));
+        }
         history.push(entry);
        }
        else if(state.tick===last.state.tick)history[history.length-1]=entry;
