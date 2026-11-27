@@ -833,7 +833,8 @@ function updateDuelDiagnostics(now,frameMs){
  const ms=value=>value===null?'—':Math.round(value)+' ms';
  stats.label.textContent=Math.round(stats.frames*1000/elapsed)+' FPS · pico '+ms(stats.worstFrame)
   +' · '+stats.slowFrames+' quadros lentos · RTT '+ms(network.roundTripMs)
-  +' · estado há '+ms(network.stateAgeMs)+' · '+stats.waitingFrames+' quadros aguardando rede';
+  +' · estado há '+ms(network.stateAgeMs)+' · '+stats.waitingFrames+' quadros aguardando rede'
+  +' · marcha '+ms(network.shiftConfirmationMs);
  stats.since=now;
  stats.frames=stats.slowFrames=stats.worstFrame=stats.waitingFrames=0;
 }
@@ -844,7 +845,7 @@ function loop(t){
  const dt=Math.min(.1,frameMs/1000);
  last=t;
  if(!paused){
-  if(onlineRace)updateOnlineRace(dt,t);
+  if(onlineRace)updateOnlineRace(t);
   else update(dt,t);
   if(!running)return;
  }else exhaustEffects.suspend();
@@ -1420,7 +1421,7 @@ function prepareOnlineRace(){
  return data[selectedVehicle().colorKey]??0;
 }
 
-function updateOnlineRace(dt,now){
+function updateOnlineRace(now){
  const connection=onlineRace;
  connection.poll(now,{
   throttle:Boolean(keys.w||keys.arrowup||touch.throttle),
@@ -1446,7 +1447,7 @@ function updateOnlineRace(dt,now){
  }
  const follow=(driver,snapshot)=>{
   const previous=driver.dist;
-  driver.dist=Math.max(driver.dist,driver.dist+(snapshot.distance-driver.dist)*Math.min(1,dt*20));
+  driver.dist=Math.max(driver.dist,snapshot.distance);
   driver.speed=snapshot.speed;
   driver.rpm=snapshot.rpm;
   driver.gear=snapshot.gear;

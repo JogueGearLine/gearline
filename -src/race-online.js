@@ -33,7 +33,9 @@ const GearLineOnlineRace=(()=>{
   let pending=false;
   let nextRequest=0;
   let sequence=0;
-  let nextShift=0;
+  let nextShift=null;
+  let shiftMeasurement=null;
+  let lastShiftConfirmationMs=null;
   let failures=0;
   const history=[];
   let packetIntervalMs=60;
@@ -44,7 +46,7 @@ const GearLineOnlineRace=(()=>{
   const connection={
    id,state:null,failed:false,
    finishInvite(){return api.finishRaceInvite(inviteId)},
-   shift(direction){nextShift=direction},
+   shift(direction){nextShift={direction,pressedAt:performance.now()}},
    sample(now){
     if(!history.length)return connection.state;
     const latest=history[history.length-1];
@@ -91,6 +93,7 @@ const GearLineOnlineRace=(()=>{
     const latest=history.at(-1);
     return {
      roundTripMs:lastRoundTripMs,
+     shiftConfirmationMs:lastShiftConfirmationMs,
      stateAgeMs:latest?Math.max(0,now-latest.receivedAt):null,
      waitingForState:!!latest&&latest.state.phase==='racing'&&presentationTick>=latest.state.tick+maxPredictionMs/tickMs
     };
@@ -100,13 +103,31 @@ const GearLineOnlineRace=(()=>{
     pending=true;
     nextRequest=now+60;
     const shift=nextShift;
-    nextShift=0;
+    nextShift=null;
+    const commandSequence=sequence++;
+    if(shift){
+     const gear=connection.state?.players?.find(player=>player.id===id)?.gear;
+     const expectedGear=gear+shift.direction;
+     // If two commands overlap, a later snapshot may not identify which one changed the gear.
+     shiftMeasurement=!shiftMeasurement&&Number.isInteger(gear)&&expectedGear>=0&&expectedGear<=5
+      ?{pressedAt:shift.pressedAt,sequence:commandSequence,expectedGear}:null;
+    }
     const sentAt=performance.now();
-    request('state',{key,input:{...input,sequence:sequence++,shift}})
+    request('state',{key,input:{...input,sequence:commandSequence,shift:shift?.direction??0}})
      .then(state=>{if(!closed){
       connection.state=state;
       const receivedAt=performance.now();
       lastRoundTripMs=receivedAt-sentAt;
+      if(shiftMeasurement){
+       const player=state.players?.find(item=>item.id===id);
+       const elapsed=receivedAt-shiftMeasurement.pressedAt;
+       if(elapsed>2000||state.phase==='finished'){
+        shiftMeasurement=null;
+       }else if(player?.sequence>=shiftMeasurement.sequence&&player.gear===shiftMeasurement.expectedGear){
+        lastShiftConfirmationMs=elapsed;
+        shiftMeasurement=null;
+       }
+      }
       if(Number.isFinite(state.tick)){
        const entry={state,receivedAt},last=history[history.length-1];
        if(!last||state.tick>last.state.tick){
