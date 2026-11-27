@@ -38,6 +38,7 @@ const GearLineOnlineRace=(()=>{
   const history=[];
   let oneWayMs=0;
   let packetIntervalMs=60;
+  let lastRoundTripMs=null;
   let presentationTick=null;
   let lastSampleAt=null;
   const connection={
@@ -84,6 +85,14 @@ const GearLineOnlineRace=(()=>{
      distance:player.time===null?Math.min(latest.state.distance,player.distance+player.speed/3.6*seconds):player.distance
     }))};
    },
+   networkStats(now){
+    const latest=history.at(-1);
+    return {
+     roundTripMs:lastRoundTripMs,
+     stateAgeMs:latest?Math.max(0,now-latest.receivedAt):null,
+     waitingForState:!!latest&&latest.state.phase==='racing'&&presentationTick>=latest.state.tick+maxPredictionMs/tickMs
+    };
+   },
    poll(now,input){
     if(closed||pending||now<nextRequest)return;
     pending=true;
@@ -95,7 +104,8 @@ const GearLineOnlineRace=(()=>{
      .then(state=>{if(!closed){
       connection.state=state;
       const receivedAt=performance.now();
-      const measuredOneWay=Math.min(250,(receivedAt-sentAt)/2);
+      lastRoundTripMs=receivedAt-sentAt;
+      const measuredOneWay=Math.min(250,lastRoundTripMs/2);
       oneWayMs=oneWayMs?oneWayMs*.75+measuredOneWay*.25:measuredOneWay;
       if(Number.isFinite(state.tick)){
        const entry={state,receivedAt,oneWayMs},last=history[history.length-1];

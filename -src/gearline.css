@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 :root{--bg:#080d12;--panel:#101820;--panel2:#141f29;--line:#263541;--muted:#8a9aa6;--white:#eef4f6;--lime:#c5f36b;--orange:#ff713b}
+.duel-diagnostics{position:absolute;z-index:2;top:20%;left:8px;max-width:calc(100% - 16px);padding:5px 8px;border-radius:4px;background:#080d12df;color:var(--white);font:11px/1.4 monospace;pointer-events:none}
+.duel-diagnostics:empty{display:none}
 
 body:has(#home:not(.hidden)){
  background:
