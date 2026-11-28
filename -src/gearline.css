@@ -141,6 +141,9 @@ body:has(#home:not(.hidden)){
 .result[data-outcome=win] .race-player,.result[data-outcome=loss] .race-rival{border-color:#8ba451;background:#192620;color:var(--lime)}
 .race-gap{display:flex;gap:8px;justify-content:center;margin:12px 0 20px}
 .race-gap strong{color:var(--white)}
+.race-splits{display:grid;grid-template-columns:auto auto;justify-content:center;gap:4px 12px;margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:12px;font-variant-numeric:tabular-nums}
+.race-splits dt{color:var(--muted);text-align:left}
+.race-splits dd{margin:0;color:var(--white);text-align:right}
 .race-stats{margin:0 0 20px}
 .race-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #raceChoice .tile h3{margin-top:0}
@@ -299,12 +302,12 @@ body:has(#home:not(.hidden)){
 #home .menu h3{margin:7px 0 4px}
 #home .menu .home-race,
 #home .menu .home-vehicles{min-height:176px;isolation:isolate}
-#home .home-race{
+#home .home-featured{
  background:linear-gradient(110deg,#233122,#121d19 52%,#151d21);
  border-color:#586b3d;
  border-left:3px solid var(--lime);
 }
-#home .home-race::after{
+#home .home-featured::after{
  content:"";
  position:absolute;
  z-index:-1;
@@ -314,7 +317,7 @@ body:has(#home:not(.hidden)){
  transform:skewX(-16deg) translateX(14%);
  pointer-events:none;
 }
-#home .home-race h3{font-size:clamp(32px,4vw,48px)}
+#home .home-featured h3{font-size:clamp(32px,4vw,48px)}
 #home .home-vehicles:has(#homeCarPreview:not(.hidden)) > :not(canvas){
  max-width:54%;
  position:relative;
@@ -344,3 +347,10 @@ body:has(#home:not(.hidden)){
  #driving[data-free-online] .hud .chip{padding:5px 8px;font-size:11px;letter-spacing:.2px}
  #driving[data-free-online] .hud .chip:not(#modechip){display:none}
 }
+
+#dealer .dealer-car{display:block;width:min(100%,360px);height:auto;margin:8px auto;background:radial-gradient(ellipse at 50% 82%,#263741,transparent 70%)}
+#dealer .dealer-grid p{margin:8px 0}
+.dealer-balance{display:block;min-height:1.4em;margin:0 0 12px;color:var(--muted)}
+#firstDrive{margin-bottom:16px}
+#firstDriveHint{position:absolute;z-index:2;top:23%;left:50%;transform:translateX(-50%);margin:0;padding:5px 12px;border-radius:6px;background:#091016ed;color:var(--lime);font-weight:700;font-size:clamp(12px,2vw,16px);text-align:center;pointer-events:none}
+.car-record{font-size:14px;color:var(--lime);font-variant-numeric:tabular-nums}

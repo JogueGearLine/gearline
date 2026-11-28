@@ -23,7 +23,7 @@ const GearLineRacePhysics=(()=>{
  const raceDistance=402;
 
  function newRun(gear=0){
-  return {speed:0,rpm:900,gear,nitro:100,dist:0,max:0,elapsed:0,shiftLock:0,boost:0,clutch:0,finishTime:null};
+  return {speed:0,rpm:900,gear,nitro:100,dist:0,max:0,elapsed:0,shiftLock:0,boost:0,clutch:0,finishTime:null,reactionTime:null,split100:null};
  }
  function updateTurbo(boost,rpm,throttle,installed,dt){
   const target=installed&&throttle?Math.max(0,Math.min(1,(rpm-2350)/1900)):0;
@@ -67,6 +67,13 @@ const GearLineRacePhysics=(()=>{
   driver.nitro=Math.max(0,driver.nitro-nitroSeconds*24);
   driver.shiftLock=Math.max(0,driver.shiftLock-dt);
   const meters=driver.speed/3.6*dt;
+  if(Number.isFinite(finishDistance)){
+   // The race clock starts at green. Revving in neutral or against the brake is not a launch.
+   if(driver.reactionTime===null&&pulling)driver.reactionTime=driver.elapsed;
+   if(driver.split100===null&&driver.dist<100&&driver.dist+meters>=100){
+    driver.split100=driver.elapsed+dt*(100-driver.dist)/meters;
+   }
+  }
   if(driver.dist+meters>=finishDistance && meters>0){
    const remaining=finishDistance-driver.dist;
    driver.finishTime=driver.elapsed+dt*remaining/meters;

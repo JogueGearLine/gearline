@@ -50,6 +50,15 @@ function createGearLineAccounts() {
   base.vehicleId=base.ownedVehicles.includes(saved?.vehicleId)?saved.vehicleId:base.ownedVehicles[0]??null;
   base.best=Number.isFinite(Number(saved?.best))&&Number(saved?.best)>0?Number(saved?.best):null;
   base.best600=Number.isFinite(Number(saved?.best600))&&Number(saved?.best600)>0?Number(saved?.best600):null;
+  base.carBests={};
+  for(const id of base.ownedVehicles){
+   for(const meters of [402,600]){
+    const time=saved?.carBests?.[id]?.[meters];
+    if(Number.isFinite(time)&&time>0){
+     (base.carBests[id]??={})[meters]=time;
+    }
+   }
+  }
   normalizeSetup(base,saved);
   if(base.peugeotSetup)normalizeSetup(base.peugeotSetup,saved?.peugeotSetup);
   if(base.astraSetup)normalizeSetup(base.astraSetup,saved?.astraSetup);
