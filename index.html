@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="favicon.ico?v=20261125-coroa">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=20261125-coroa">
-<link rel="stylesheet" href="-src/gearline.css?v=20261128-loja">
+<link rel="stylesheet" href="-src/gearline.css?v=20261128-lancer-usd">
 </head>
 <body>
 <header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><button class="btn ghost shop-button hidden" id="shopLink" type="button" aria-label="Loja" title="Loja" aria-controls="shop"><span class="shop-icon" aria-hidden="true"></span></button><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
@@ -132,7 +132,7 @@
  </div>
 </section>
 <section id="dealer" class="hidden">
- <div class="hero"><div><h1>CONCESSIONÁRIA</h1><p class="muted">Saldo <strong id="dealerCash"></strong></p></div><button class="btn secondary" onclick="show('carMenu')">← CARRO</button></div>
+ <div class="hero"><div><h1>CONCESSIONÁRIA</h1><p class="muted">Saldo <strong id="dealerCash"></strong> · <strong id="dealerUsd"></strong></p></div><button class="btn secondary" onclick="show('carMenu')">← CARRO</button></div>
  <div class="dealer-grid">
   <article class="panel specs"><div class="eyebrow">Volkswagen</div><h2>Gol Quadrado</h2><canvas class="dealer-car" id="preview-gol" width="560" height="220" aria-hidden="true"></canvas><p class="muted">1.8 aspirado • 110 cv</p><small class="dealer-balance" id="balance-gol"></small><button class="btn full" id="buy-gol" type="button">Comprar</button></article>
   <article class="panel specs"><div class="eyebrow">Peugeot</div><h2>Peugeot 206</h2><canvas class="dealer-car" id="preview-peugeot206" width="560" height="220" aria-hidden="true"></canvas><p class="muted">105 cv • aceita kit turbo</p><small class="dealer-balance" id="balance-peugeot206"></small><button class="btn full" id="buy-peugeot206" type="button">Comprar</button></article>
@@ -203,4 +203,4 @@
 <script src="-src/community.js?v=20261125-crew"></script>
 <script src="-src/pilots.js?v=20261126-presenca"></script>
 <script src="-src/free-online.js?v=20261126-ultrapassagem"></script>
-<script src="-src/game.js?v=20261128-loja"></script></body></html>
+<script src="-src/game.js?v=20261128-lancer-500"></script></body></html>

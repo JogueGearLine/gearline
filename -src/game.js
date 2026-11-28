@@ -403,7 +403,17 @@ const astra={id:'astra',name:'CHEVROLET ASTRA',shortName:'ASTRA 2.0',chip:'ASTRA
 const chevette={id:'chevette',name:'CHEVROLET CHEVETTE SL',shortName:'CHEVETTE SL',chip:'CHEVETTE 1.6',detail:'1.6 aspirado / tração traseira / 5 marchas',weight:'910 kg',traction:'Traseira',colorKey:'chevetteColor',power:75,...vehiclePhysics.chevette,body:chevetteBody,mask:chevetteMask,paint:{},width:1600,height:503,axleY:470,diameter:278,exhaustX:1480,exhaustY:456,sportExhaust:{x:1547,y:456,length:72,height:25},brake:ctx=>drawNewBrakeLight(ctx,1568,321,8,14),wheels:preparedWheels(chevetteFrontWheel,chevetteRearWheel,[275,1260]),enginePitch:.84};
 const lancer={id:'lancer',name:'MITSUBISHI LANCER EVOLUTION X',shortName:'LANCER EVO X',chip:'LANCER EVO X',detail:'2.0 turbo / tração integral / 5 marchas',weight:'1.595 kg',traction:'Integral',colorKey:'lancerColor',power:295,...vehiclePhysics.lancer,body:lancerBody,mask:lancerMask,paint:{},width:1600,height:514,axleY:451,diameter:261,exhaustX:1550,exhaustY:485,sportExhaust:{x:1564,y:491,length:73,height:30},brake:ctx=>drawNewBrakeLight(ctx,1538,234,17,12),wheels:preparedWheels(lancerFrontWheel,lancerRearWheel,[345,1309]),enginePitch:1.04};
 const vehicles={gol,peugeot206:peugeot,astra,chevette,lancer};
-const dealerPrices={gol:15000,peugeot206:18000,astra:24000,chevette:13500,lancer:95000};
+const dealerPrices={
+ gol:{price:15000,currency:'cash'},
+ peugeot206:{price:18000,currency:'cash'},
+ astra:{price:24000,currency:'cash'},
+ chevette:{price:13500,currency:'cash'},
+ lancer:{price:500,currency:'usd'}
+};
+const dealerCurrencies={
+ cash:{format:formatCash,unlimited:()=>accounts?.unlimitedCash===true},
+ usd:{format:amount=>'US$ '+amount.toLocaleString('pt-BR'),unlimited:()=>false}
+};
 const newVehicleAvailable=id=>id==='lancer'?window.GEARLINE_LANCER_AVAILABLE===true
  :!['astra','chevette'].includes(id)||window.GEARLINE_NEW_CARS_AVAILABLE===true;
 
@@ -417,24 +427,29 @@ function drawDealerCar(id){
 
 function renderDealer(){
  $('dealerCash').textContent=displayCash();
- for(const [id,price] of Object.entries(dealerPrices)){
+ $('dealerUsd').textContent=dealerCurrencies.usd.format(data.usd);
+ for(const [id,{price,currency}] of Object.entries(dealerPrices)){
   const button=$('buy-'+id),owned=data.ownedVehicles.includes(id);
   const available=newVehicleAvailable(id);
-  const shortfall=price-data.cash;
+  const {format,unlimited}=dealerCurrencies[currency];
+  const hasUnlimitedBalance=unlimited();
+  const shortfall=price-data[currency];
   const budget=$('balance-'+id);
-  budget.textContent=owned||!available?'':accounts?.unlimitedCash?'Saldo após a compra · R$ ∞'
-   :shortfall>0?'Faltam '+formatCash(shortfall):'Saldo após a compra · '+formatCash(-shortfall);
-  button.disabled=owned||!available||(!accounts?.unlimitedCash&&shortfall>0);
+  budget.textContent=owned||!available?'':hasUnlimitedBalance?'Saldo após a compra · R$ ∞'
+   :shortfall>0?'Faltam '+format(shortfall):'Saldo após a compra · '+format(-shortfall);
+  button.disabled=owned||!available||(!hasUnlimitedBalance&&shortfall>0);
   drawDealerCar(id);
-  button.textContent=owned?'Na garagem':available?'Comprar por '+formatCash(price):'Em breve · '+formatCash(price);
+  button.textContent=owned?'Na garagem':available?'Comprar por '+format(price):'Em breve · '+format(price);
  }
 }
 
 function buyVehicle(id){
  if(!data||!Object.hasOwn(dealerPrices,id)||data.ownedVehicles.includes(id)||!newVehicleAvailable(id))return;
- const price=dealerPrices[id];
- if(!accounts?.unlimitedCash&&data.cash<price){toast('Saldo insuficiente.');return;}
- if(!accounts?.unlimitedCash)data.cash-=price;
+ const {price,currency}=dealerPrices[id];
+ if(!dealerCurrencies[currency].unlimited()){
+  if(data[currency]<price){toast('Saldo insuficiente.');return;}
+  data[currency]-=price;
+ }
  data.ownedVehicles.push(id);
  data.vehicleId=id;
  save();

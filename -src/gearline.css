@@ -178,7 +178,7 @@ body:has(#home:not(.hidden)){
 @media(max-width:520px){.pilot .money{flex-basis:100%;text-align:left}.money-values{justify-content:flex-start}}
 .dealer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .dealer-grid p{margin:10px 0 24px}
-#dealerCash{color:var(--lime)}
+#dealerCash,#dealerUsd{color:var(--lime)}
 @media(max-width:600px){.dealer-grid{grid-template-columns:1fr}}
 /* Controles móveis e área completa de pista. */
 .race-map{
