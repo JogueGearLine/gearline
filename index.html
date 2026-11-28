@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="favicon.ico?v=20261125-coroa">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=20261125-coroa">
-<link rel="stylesheet" href="-src/gearline.css?v=20261128-lancer-usd">
+<link rel="stylesheet" href="-src/gearline.css?v=20261128-campanha">
 </head>
 <body>
 <header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><button class="btn ghost shop-button hidden" id="shopLink" type="button" aria-label="Loja" title="Loja" aria-controls="shop"><span class="shop-icon" aria-hidden="true"></span></button><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
@@ -57,9 +57,16 @@
  <div class="dealer-grid">
   <button class="tile" type="button" onclick="show('raceChoice')"><h3>ARRANCADA</h3><p>402 m ou 600 m, contra bot, relógio ou outro piloto.</p></button>
   <button class="tile" type="button" onclick="startFreeOnline()"><h3>MODO LIVRE</h3><p>Dirija na mesma avenida que outros pilotos.</p></button>
-  <button class="tile" type="button" disabled><h3>CAMPANHA</h3><p>Em breve</p></button>
+  <button class="tile" type="button" onclick="show('campaign')"><h3>CAMPANHA</h3><p>Complete cinco provas e ganhe recompensas.</p></button>
   <button class="tile" type="button" disabled><h3>CAMPEONATO</h3><p>Em breve</p></button>
  </div>
+</section>
+<section id="campaign" class="hidden" aria-labelledby="campaignTitle">
+ <div class="hero">
+  <div><h1 id="campaignTitle">CAMPANHA</h1><p class="muted" id="campaignProgress"></p></div>
+  <button class="btn secondary" type="button" onclick="show('raceMenu')">← CORRIDAS</button>
+ </div>
+ <ol id="campaignStages" class="campaign-stages"></ol>
 </section>
 <section id="shop" class="hidden" aria-labelledby="shopTitle">
  <div class="hero">
@@ -179,6 +186,7 @@
   </div>
  </div>
  <p class="car-record hidden" id="carRecord"></p>
+ <p class="muted hidden" id="campaignResult"></p>
  <p class="race-gap" id="resultGap">Diferença na chegada <strong id="raceGap">—</strong></p>
  <div class="stats race-stats">
   <div class="stat"><strong id="resultspd">0</strong><span>KM/H NA CHEGADA</span></div>
@@ -186,11 +194,11 @@
   <div class="stat"><strong id="resultcash">+R$ 0</strong><span>RECOMPENSA</span></div>
   <div class="stat"><strong id="resultxp">+0</strong><span>XP</span></div>
  </div>
- <div class="race-actions"><button class="btn" id="raceRetry">CORRER NOVAMENTE</button><button class="btn secondary" onclick="show('home')">VOLTAR AO PERFIL</button></div>
+ <div class="race-actions"><button class="btn" id="raceRetry">CORRER NOVAMENTE</button><button class="btn hidden" type="button" id="campaignNext">PRÓXIMA PROVA</button><button class="btn secondary hidden" type="button" id="campaignBack" onclick="show('campaign')">VOLTAR À CAMPANHA</button><button class="btn secondary" id="raceHome" onclick="show('home')">VOLTAR AO PERFIL</button></div>
 </section>
 </main><aside id="raceNotice" class="race-notice hidden" aria-label="Convite de corrida" aria-live="polite"><div class="race-notice-copy"><span class="eyebrow">Convite de arrancada</span><strong id="raceNoticePilot"></strong><small id="raceNoticeDetail" class="muted"></small></div><div id="raceNoticeActions" class="row"><button id="raceNoticeAccept" class="btn" type="button">ACEITAR</button><button id="raceNoticeDecline" class="btn ghost" type="button">RECUSAR</button></div><p id="raceNoticeStatus" class="muted" role="status"></p></aside><div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
-<script src="-src/accounts.js?v=20261128-primeira-arrancada"></script>
+<script src="-src/accounts.js?v=20261128-campanha"></script>
 <script src="-src/exhaust.js?v=20261126-backfire-6000"></script>
 <script src="-src/peugeot206.js"></script>
 <script src="-src/new-vehicles.js?v=20261127-lancer-vps"></script>
@@ -203,4 +211,4 @@
 <script src="-src/community.js?v=20261125-crew"></script>
 <script src="-src/pilots.js?v=20261126-presenca"></script>
 <script src="-src/free-online.js?v=20261126-ultrapassagem"></script>
-<script src="-src/game.js?v=20261128-lancer-500"></script></body></html>
+<script src="-src/game.js?v=20261128-campanha"></script></body></html>

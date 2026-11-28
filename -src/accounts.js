@@ -33,6 +33,7 @@ function createGearLineAccounts() {
   const base=fresh(String(saved?.name||'Piloto').trim().slice(0,18)||'Piloto');
   const number=(value,min,max,fallback)=>Number.isFinite(Number(value))?Math.min(max,Math.max(min,Number(value))):fallback;
   base.cash=number(saved?.cash,0,1e9,base.cash);
+  base.campaignCompleted=Math.floor(number(saved?.campaignCompleted,0,1e6,0));
   base.races=Math.floor(number(saved?.races,0,1e6,0));
   base.wins=Math.floor(number(saved?.wins,0,1e6,0));
   base.xp=number(saved?.xp,0,1e9,0);

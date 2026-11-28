@@ -14,7 +14,7 @@ function freshPeugeotSetup(){
 }
 const vehicleSetupKeys={peugeot206:'peugeotSetup',astra:'astraSetup',chevette:'chevetteSetup',lancer:'lancerSetup'};
 function activeSetup(){const key=vehicleSetupKeys[data.vehicleId];return key?(data[key]??=freshPeugeotSetup()):data}
-function fresh(name){return {name,cash:20000,usd:10,ownedVehicles:[],carBests:{},races:0,wins:0,best:null,best600:null,maxSpeed:0,xp:0,color:0,peugeotColor:0,astraColor:0,chevetteColor:0,lancerColor:0,vehicleId:null,peugeotSetup:freshPeugeotSetup(),astraSetup:freshPeugeotSetup(),chevetteSetup:freshPeugeotSetup(),lancerSetup:freshPeugeotSetup(),upgrades:{tune:false,nitro:false,exhaust:false,backfire:false,lowered:false,shortGearing:false}}}
+function fresh(name){return {name,cash:20000,usd:10,ownedVehicles:[],carBests:{},campaignCompleted:0,races:0,wins:0,best:null,best600:null,maxSpeed:0,xp:0,color:0,peugeotColor:0,astraColor:0,chevetteColor:0,lancerColor:0,vehicleId:null,peugeotSetup:freshPeugeotSetup(),astraSetup:freshPeugeotSetup(),chevetteSetup:freshPeugeotSetup(),lancerSetup:freshPeugeotSetup(),upgrades:{tune:false,nitro:false,exhaust:false,backfire:false,lowered:false,shortGearing:false}}}
 async function toggleDrivingFullscreen(){
  const driving=$('driving');
  const status=$('mobileDisplayStatus');
@@ -50,7 +50,7 @@ document.addEventListener('fullscreenchange',()=>{
  $('mobileDisplayStatus').textContent='';
  (fullscreen?$('driving'):document.body).append($('toast'));
 });
-function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';renderShopLink(id);['auth','home','carMenu','raceMenu','shop','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();drawHomeCar();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
+function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';renderShopLink(id);['auth','home','carMenu','raceMenu','campaign','shop','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();drawHomeCar();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='campaign')renderCampaign();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
 function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2200)}
 function renderShopLink(screen){
  const link=$('shopLink');
@@ -1023,6 +1023,58 @@ function createRival(playerUpgrades,random=Math.random){
   launchRpm:stockMatch?2300:Math.min(3450,model.torquePeak*.76)
  };
 }
+const campaignStages=[
+ {title:'Primeira largada',track:'night',goal:'Complete a prova sem queimar a largada.',reward:750},
+ {title:'Contra o relógio',track:'night',goal:'Complete a prova em até 24 s.',limit:24,reward:1250},
+ {title:'Duelo com o Chevette',track:'night',goal:'Vença o Chevette SL.',opponent:'chevette',reaction:.65,shiftDelay:.45,reward:1750},
+ {title:'Duelo com o Peugeot',track:'night',goal:'Vença o Peugeot 206.',opponent:'peugeot206',reaction:.4,shiftDelay:.3,reward:2250},
+ {title:'Final no autódromo',track:'dusk',goal:'Vença o Astra 2.0 com acerto de motor.',opponent:'astra',reaction:.3,shiftDelay:.24,upgrades:{tune:true},reward:3500}
+];
+let activeCampaignStage=null;
+
+function renderCampaign(){
+ const completed=Math.min(data.campaignCompleted,campaignStages.length);
+ $('campaignProgress').textContent=completed+' de '+campaignStages.length+' provas concluídas';
+ const list=$('campaignStages');
+ list.replaceChildren();
+ campaignStages.forEach((stage,index)=>{
+  const locked=index>completed;
+  const item=document.createElement('li');
+  item.className='panel campaign-stage';
+  const title=document.createElement('h2');
+  title.textContent=stage.title;
+  const goal=document.createElement('p');
+  goal.className='muted';
+  goal.textContent=raceTracks[stage.track].distance+' m · '+stage.goal;
+  const reward=document.createElement('p');
+  reward.className='campaign-reward';
+  reward.textContent=index<completed?'Recompensa recebida':formatCash(stage.reward)+' na primeira conclusão';
+  const button=document.createElement('button');
+  button.className='btn secondary';
+  button.type='button';
+  button.disabled=locked;
+  button.textContent=locked?'Bloqueada':!data.vehicleId?'Escolher um carro':index<completed?'Repetir prova':'Correr';
+  button.setAttribute('aria-label',button.textContent+' · '+stage.title);
+  button.onclick=()=>startCampaignStage(index);
+  item.append(title,goal,reward,button);
+  list.append(item);
+ });
+}
+
+function startCampaignStage(index){
+ const stage=campaignStages[index];
+ if(!data||!stage||index>data.campaignCompleted)return;
+ startGame('race','campaign',stage.track,null,index);
+}
+
+function createCampaignRival(stage){
+ if(!stage.opponent)return null;
+ const model=vehicles[stage.opponent];
+ return {...newRun(1),model,upgrades:stage.upgrades??{},reaction:stage.reaction,
+  shiftDelay:stage.shiftDelay,shiftLimit:.92,launchRpm:Math.min(3450,model.torquePeak*.76),
+  buildName:stage.upgrades?'Acerto de motor':'Original',color:2,paint:{},wheelAngle:0};
+}
+
 let rival=null;
 let laneY=470,lateral=0;
 let freeConnection=null;
@@ -1575,6 +1627,7 @@ function finishOnlineRace(state,own,other){
  $('resultRival').classList.remove('hidden');
  $('resultGap').classList.toggle('hidden',own.time===null||other.time===null);
  $('raceRetry').classList.add('hidden');
+ renderCampaignResult(null,false,0);
  $('resultPlayerCar').textContent=selectedVehicle().chip;
  $('resultRivalCar').textContent=other.name+' · '+rival.model.chip;
  $('resulttime').textContent=time(own.time);
@@ -1613,11 +1666,13 @@ function startFreeOnline(){
  }),status=>{if($('modechip').textContent!==status)$('modechip').textContent=status;});
 }
 
-function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connection=null){
+function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connection=null,campaignIndex=null){
  if(!data){toast('Entre no perfil antes de dirigir.');return}
  if(!data.vehicleId){show('dealer');return;}
  stopGame();
- guidedDrive=raceKind==='training';
+ activeCampaignStage=campaignIndex;
+ const campaign=campaignStages[activeCampaignStage];
+ guidedDrive=raceKind==='training'||activeCampaignStage===0;
  $('firstDriveHint').classList.toggle('hidden',!guidedDrive);
  onlineRace=connection;
  mode=which==='race'?'race':'free';
@@ -1629,7 +1684,7 @@ function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connec
  trafficHitAt=-Infinity;
  freeDrivePaid=0;
  freeDriveSaved=0;
- rival=mode==='race'&&raceKind==='bot'?createRival(activeSetup().upgrades):null;
+ rival=campaign?createCampaignRival(campaign):mode==='race'&&raceKind==='bot'?createRival(activeSetup().upgrades):null;
  $('rivalchip').classList.toggle('hidden',!rival);
  if(rival)$('rivalchip').textContent='Rival: '+rival.model.chip;
  $('raceMap').classList.toggle('hidden',mode!=='race');
@@ -1643,8 +1698,10 @@ function startGame(which,raceKind='bot',selectedTrack=selectedRaceTrack(),connec
  $('pauseHelp')?.classList.toggle('hidden',Boolean(onlineRace));
  $('gametype').textContent=mode==='race'?(trackId==='dusk'?'Autódromo ao entardecer':'Reta noturna')+' • '+(rival?'Contra bot':'Contra o relógio'):'Modo livre • condução livre';
  $('gametitle').innerHTML=mode==='race'?'LARGADA <span style="color:var(--lime)">'+raceDistance+' M.</span>':'AVENIDA <span style="color:var(--lime)">NOTURNA.</span>';
+ if(campaign)$('gametype').textContent='Campanha · '+campaign.title;
  $('carchip').textContent=selectedVehicle().chip;
  $('modechip').textContent=mode==='race'?(rival?'DRAG RACE':'CONTRA O RELÓGIO')+' • '+raceDistance+' M':'FREE DRIVE';
+ if(campaign)$('modechip').textContent='CAMPANHA • '+raceDistance+' M';
  $('racemsg').textContent=mode==='race'?'PREPARE-SE…':'';
  if(onlineRace){
   $('gametype').textContent='Duelo privado';
@@ -1707,14 +1764,39 @@ function renderRaceSplits(id,driver,valid){
  split.textContent=seconds(driver.split100);
 }
 
+function renderCampaignResult(stage,passed,reward){
+ const isCampaign=Boolean(stage);
+ const note=$('campaignResult');
+ note.classList.toggle('hidden',!isCampaign);
+ $('campaignBack').classList.toggle('hidden',!isCampaign);
+ $('raceHome').classList.toggle('hidden',isCampaign);
+ const hasNext=isCampaign&&passed&&activeCampaignStage+1<campaignStages.length;
+ $('campaignNext').classList.toggle('hidden',!hasNext);
+ if(!isCampaign){
+  delete $('result').dataset.campaign;
+  return;
+ }
+ $('result').dataset.campaign='true';
+ note.textContent=!passed?'Objetivo: '+stage.goal
+  :reward===0?'Prova concluída · recompensa já recebida'
+  :data.campaignCompleted===campaignStages.length?'Campanha concluída!':'Prova concluída · próxima etapa liberada';
+}
+
+$('campaignNext').onclick=()=>startCampaignStage(activeCampaignStage+1);
+
 function finishRace(){
  if(!running)return;
  stopGame();
  const gap=rival?car.finishTime-rival.finishTime:null;
  const tied=gap!==null&&Math.abs(gap)<.005;
  const won=gap!==null&&!penalty&&!tied&&gap<0;
- const reward=won?500:0;
- const xp=won?120:0;
+ const stage=campaignStages[activeCampaignStage];
+ const reachedTarget=stage?.limit==null||Number(car.finishTime.toFixed(2))<=stage.limit;
+ const passed=Boolean(stage)&&!penalty&&(rival?won:reachedTarget);
+ const firstCompletion=passed&&activeCampaignStage===data.campaignCompleted;
+ if(firstCompletion)data.campaignCompleted++;
+ const reward=stage?(firstCompletion?stage.reward:0):won?500:0;
+ const xp=stage?(firstCompletion?120:0):won?120:0;
  data.races++;
  if(won)data.wins++;
  data.cash+=reward;
@@ -1730,7 +1812,8 @@ function finishRace(){
  $('result').dataset.outcome=penalty?'penalty':!rival?'solo':tied?'tie':won?'win':'loss';
  $('result').dataset.solo=String(!rival);
  $('raceRetry').classList.remove('hidden');
- $('resultMode').textContent=(rival?'Arrancada':'Contra o relógio')+' • '+raceDistance+' m';
+ renderCampaignResult(stage,passed,reward);
+ $('resultMode').textContent=(stage?'Campanha · '+stage.title:rival?'Arrancada':'Contra o relógio')+' • '+raceDistance+' m';
  $('resultRival').classList.toggle('hidden',!rival);
  $('resultGap').classList.toggle('hidden',!rival);
  $('resultPlayerCar').textContent=selectedVehicle().chip;
@@ -1745,11 +1828,15 @@ function finishRace(){
  $('resultrpm').textContent=car.gear+'ª';
  $('resultxp').textContent='+'+xp;
  $('resulttitle').textContent=penalty?'QUEIMA DE LARGADA'
+  :stage?(passed?'PROVA CONCLUÍDA':'OBJETIVO NÃO ATINGIDO')
   :!rival?(newRecord?'NOVO RECORDE!':'LINHA CRUZADA')
   :tied?'EMPATE':won?'VOCÊ VENCEU!':'RIVAL VENCEU';
  show('result');
 }
-$('raceRetry').onclick=()=>startGame('race',rival?'bot':'clock',trackId);
+$('raceRetry').onclick=()=>{
+ if(activeCampaignStage!==null)startCampaignStage(activeCampaignStage);
+ else startGame('race',rival?'bot':'clock',trackId);
+};
 function canPauseGame(){return running&&!freeConnection&&!onlineRace;}
 $('pause').onclick=()=>{if(!canPauseGame())return;paused=!paused;$('pause').textContent=paused?'▶ RETOMAR':'Ⅱ PAUSAR';$('racemsg').textContent=paused?'PAUSADO':'';if(paused){keys={};touch={throttle:false,brake:false}}};
 function bindShiftButton(id,direction){
