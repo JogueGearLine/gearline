@@ -9,10 +9,10 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="favicon.ico?v=20261125-coroa">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=20261125-coroa">
-<link rel="stylesheet" href="-src/gearline.css?v=20261128-parciais">
+<link rel="stylesheet" href="-src/gearline.css?v=20261128-loja">
 </head>
 <body>
-<header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
+<header class="top"><div><div><button class="brand brand-home" id="brandHome" type="button" aria-label="GearLine — voltar à tela inicial" disabled>GEAR<b>LINE</b></button></div><small>RUA • MÁQUINA • PRECISÃO</small></div><div class="topright"><button class="btn ghost shop-button hidden" id="shopLink" type="button" aria-label="Loja" title="Loja" aria-controls="shop"><span class="shop-icon" aria-hidden="true"></span></button><details class="music-player hidden" id="musicHeader"><summary>Música</summary><div class="music-panel"><p data-track aria-live="polite"></p><div class="music-actions"><button class="btn secondary" type="button" data-play>Ouvir</button><button class="btn secondary" type="button" data-next>Próxima</button></div><label>Volume <input type="range" data-volume min="0" max="100" value="25"></label></div></details><span id="topuser">MODO OFFLINE</span><button class="btn ghost" id="logout" style="padding:8px 11px">SAIR</button></div></header>
 <main class="wrap">
 <section id="auth" class="login panel">
  <div class="eyebrow">Bem-vindo à rua</div><h1>SEU CARRO.<br>SUA LINHA.</h1>
@@ -37,7 +37,7 @@
  </div>
  <div class="menu">
   <button class="tile home-race home-featured" type="button" onclick="show('raceMenu')">
-   <span class="eyebrow">Na pista</span><h3>CORRIDAS</h3><p>Arrancada e modo livre.</p>
+  <span class="eyebrow">Na pista</span><h3>CORRIDAS</h3><p>Escolha seu modo de corrida.</p>
   </button>
   <button class="tile home-vehicles" type="button" onclick="show(data?.vehicleId?'carMenu':'dealer')">
    <span class="eyebrow" id="homeVehicleLabel">Concessionária e garagem</span>
@@ -54,7 +54,19 @@
 </section>
 <section id="raceMenu" class="hidden group-menu" aria-labelledby="raceMenuTitle">
  <div class="hero"><div><div class="eyebrow">Na pista</div><h1 id="raceMenuTitle">CORRIDAS<span class="social-accent">.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
- <div class="dealer-grid"><button class="tile" onclick="show('raceChoice')"><div class="eyebrow">Duelo</div><h3>ARRANCADA</h3><p>402 m ou 600 m, contra bot, relógio ou outro piloto.</p></button><button class="tile" onclick="startGame('free')"><h3>MODO LIVRE</h3><p>Dirija sozinho pela avenida noturna.</p></button><button class="tile" onclick="startFreeOnline()"><h3>MODO LIVRE ONLINE</h3><p>Dirija na mesma avenida que outros pilotos.</p></button></div>
+ <div class="dealer-grid">
+  <button class="tile" type="button" onclick="show('raceChoice')"><h3>ARRANCADA</h3><p>402 m ou 600 m, contra bot, relógio ou outro piloto.</p></button>
+  <button class="tile" type="button" onclick="startFreeOnline()"><h3>MODO LIVRE</h3><p>Dirija na mesma avenida que outros pilotos.</p></button>
+  <button class="tile" type="button" disabled><h3>CAMPANHA</h3><p>Em breve</p></button>
+  <button class="tile" type="button" disabled><h3>CAMPEONATO</h3><p>Em breve</p></button>
+ </div>
+</section>
+<section id="shop" class="hidden" aria-labelledby="shopTitle">
+ <div class="hero">
+  <h1 id="shopTitle">LOJA</h1>
+  <button class="btn secondary" type="button" onclick="show('home')">← VOLTAR AO PERFIL</button>
+ </div>
+ <p class="panel shop-empty">O catálogo da GearLine chega em breve.</p>
 </section>
 <section id="communityMenu" class="hidden group-menu" aria-labelledby="communityMenuTitle">
  <div class="hero"><div><div class="eyebrow">Rede GearLine</div><h1 id="communityMenuTitle">COMUNIDADE<span class="social-accent">.</span></h1></div><button class="btn secondary" onclick="show('home')">← VOLTAR AO PERFIL</button></div>
@@ -191,4 +203,4 @@
 <script src="-src/community.js?v=20261125-crew"></script>
 <script src="-src/pilots.js?v=20261126-presenca"></script>
 <script src="-src/free-online.js?v=20261126-ultrapassagem"></script>
-<script src="-src/game.js?v=20261128-parciais"></script></body></html>
+<script src="-src/game.js?v=20261128-loja"></script></body></html>

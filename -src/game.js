@@ -50,8 +50,16 @@ document.addEventListener('fullscreenchange',()=>{
  $('mobileDisplayStatus').textContent='';
  (fullscreen?$('driving'):document.body).append($('toast'));
 });
-function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';['auth','home','carMenu','raceMenu','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();drawHomeCar();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
+function show(id){if(GearLineCommunity.busy)return;if(id==='garage'&&!data?.vehicleId)id='dealer';document.body.classList.toggle('driving-active',id==='driving');if(id!=='driving')leaveDrivingFullscreen();$('brandHome').disabled=id==='auth';renderShopLink(id);['auth','home','carMenu','raceMenu','shop','communityMenu','garage','dealer','raceChoice','raceLobby','crew','exchange','pilots','driving','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='auth'){GearLineMusic.stop();GearLinePilots.stop()}if(id==='home'){renderProfile();drawHomeCar();GearLineMusic.start()}if(id==='garage'){drawCar();renderGarage()}if(id==='dealer')renderDealer();if(id==='raceChoice')renderTrackRecords();if(id==='raceLobby')GearLineRaceLobby.open(accounts,raceTracks[selectedRaceTrack()].distance,(connection,distance)=>startGame('race','online',distance===600?'dusk':'night',connection),prepareOnlineRace);else GearLineRaceLobby.close();if(id!=='driving'){stopGame();window.scrollTo(0,0)}if(id==='crew'||id==='exchange')GearLineCommunity.open(id,accounts,data);else GearLineCommunity.close();if(id==='pilots')GearLinePilots.open(accounts);else GearLinePilots.close();GearLinePilots.screen(id)}
 function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2200)}
+function renderShopLink(screen){
+ const link=$('shopLink');
+ link.classList.toggle('hidden',screen==='auth'||screen==='driving');
+ if(screen==='shop')link.setAttribute('aria-current','page');
+ else link.removeAttribute('aria-current');
+}
+
+$('shopLink').onclick=()=>show('shop');
 $('brandHome').onclick=()=>show('home');
 let accounts;
 let registering=false;
